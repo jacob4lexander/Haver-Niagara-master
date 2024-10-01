@@ -1,0 +1,116 @@
+﻿@model IEnumerable<Haver_Niagara.ViewModels.EmployeeAdminVM>
+
+
+
+<h2>Index</h2>
+
+<div class="text-danger">@TempData["message"]</div>
+
+<div class="table-responsive">
+	<table class="table">
+		<thead>
+			<tr>
+				<th>
+					@Html.DisplayNameFor(model => model.FullName)
+				</th>
+				<th>
+					User Roles
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.Active)
+				</th>
+				<th class="text-center" style="min-width:120px">
+					<a asp-action="Create" class="btn btn-sm btn-outline-success"
+					   role="button" data-bs-toggle="tooltip" title="Create New @ViewData["ControllerFriendlyName"]">
+						<strong>&#x270D; Create</strong>
+					</a>
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var item in Model)
+			{
+				<tr>
+					<td>
+						@Html.DisplayFor(modelItem => item.FullName)<br />
+						Email: @Html.DisplayFor(modelItem => item.Email)
+					</td>
+					<td>
+						@{
+							foreach (var r in item.UserRoles)
+							{
+								@:  @r <br />
+							}
+						}
+					</td>
+					<td>
+						<div class="form-group form-switch">
+							<input class="form-check-input" type="checkbox" disabled="disabled"
+							@(Html.Raw(item.Active ? "checked=\"checked\"" : "")) />
+						</div>
+					</td>
+
+					<td class="text-center">
+						<a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm btn-outline-primary"
+						   role="button" data-bs-toggle="tooltip" title="Edit @ViewData["ControllerFriendlyName"]">
+							&#x270E; Edit
+						</a>
+						@if (item.NumberOfPushSubscriptions > 0)
+						{
+							@:| @{
+								<a asp-controller="WebPush" asp-action="Send" asp-route-id="@item.ID">Send Notification</a>
+							}
+						}
+						@if (item.ID == 1)
+						{
+							<button class="btn btn-sm btn-outline-primary delete-link"
+									disabled
+									data-item-id="@item.ID"
+									data-bs-toggle="modal"
+									data-bs-target="#deleteConfirmationModal">
+								&#x1F5D1; Delete
+							</button>
+						}
+						else
+						{
+							<button class="btn btn-sm btn-outline-primary delete-link"
+									data-item-id="@item.ID"
+									data-bs-toggle="modal"
+									data-bs-target="#deleteConfirmationModal">
+								&#x1F5D1; Delete
+							</button>
+						}
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				Are you sure you want to delete this employee?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<a id="deleteLink" class="btn btn-danger">Delete</a>
+			</div>
+		</div>
+	</div>
+</div>
+@section Scripts {
+	<script>
+		//gets the id from the td and then passes it along to delete confirmed
+		$(document).ready(function () {
+			$('.delete-link').click(function () {
+				var employeeId = $(this).data('item-id');
+				$('#deleteLink').attr('href', '/Employee/DeleteConfirmed/' + employeeId);
+			});
+		});
+	</script>
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <!--preimported site.css and bootstrap-->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <!--Font Montserrat-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    @* <link rel="stylesheet" href="~/Haver_Niagara.styles.css" asp-append-version="true" /> *@
+
+    <style>
+        .dropdown-menu {
+            min-width: 220px; 
+            text-align: left;
+        }
+
+            .dropdown-menu li {
+                padding: 0 10px;
+            }
+
+            .dropdown-menu .nav-link {
+                white-space: nowrap; 
+                overflow: visible; 
+            }
+    </style>
+</head>
+<body class="bg-haver">
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-nav border-bottom shadow box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/logo-white.png" alt="Haver_Niagara Logo" asp-append-version="true" class="img-fluid" width="250" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="List">NCR Log</a>
+                        </li>
+                        <li class="nav-item text-white">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="ListArchive">Archived Reports</a>
+                        </li>
+
+                        @{
+                            if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Office Menu
+                                    </a>
+                                    <ul class="dropdown-menu bg-nav border-secondary" aria-labelledby="navbarDropdown">
+                                        <li class="nav-item pb-1">
+                                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="ListVoided">Voided Reports</a>
+                                        </li>
+                                        <li class="nav-item border-top border-secondary pt-1">
+                                            <a class="nav-link text-white" asp-area="" asp-controller="Lookup" asp-action="Index">Maintain Lookup Values</a>
+                                        </li>
+                                        <li class="nav-item border-top border-secondary pt-1">
+                                            <a class="nav-link text-white" asp-area="" asp-controller="Employee" asp-action="Index">Maintain Employees</a>
+                                        </li>                    
+                                    </ul>
+                                </li>
+                            }
+                        }
+                            </ul>
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container shadow bg-white mt-5 list-container lookup-container">
+        <div class="report-container">
+
+            <div class="">
+                <main role="main" class="pb-3">
+                    @RenderBody()
+                </main>
+            </div>
+
+        </div>
+    </div>
+
+    <!--script for importing icons from https://ionic.io/ionicons-->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

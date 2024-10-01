@@ -1,0 +1,90 @@
+﻿        Made this file for any code that we ended up deserting and or might need to reference/ implement later.
+
+--------------------------------------------------------------------------------------
+                Display a list of problems in the table (table data)               
+<td>
+    @foreach (var defectList in item.Product.DefectLists)
+    {
+        @defectList.Defect.Name;
+    }
+</td>   
+
+                Only works if you use .Include() in the controller where you are retrieving the data
+.Include(p=>p.Product)
+.ThenInclude(d=>d.DefectLists)
+.ThenInclude(d=>d.Defect)
+--------------------------------------------------------------------------------------
+
+@*             <div class="form-group">
+                <label asp-for="PartID" class="control-label">Part ID</label>
+                <input asp-for="PartID" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="OperationID" class="control-label">Operation ID</label>
+                <input asp-for="OperationID" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="EngineeringID" class="control-label">Engineering ID</label>
+                <input asp-for="EngineeringID" class="form-control" />
+            </div> *@
+
+            Inside the CREATE for the IDs.
+
+
+
+EDIT NCR NCR STATUS AND STAGE CODE, REMOVE AS THESE FIELDS WILL BE DYNAMIC!
+    IDS are already auto generated and are applied when creating an ncr in the controller
+    so why change it? 
+
+            <div class="form-group" hidden>
+                <label asp-for="NCR_Status" class="control-label"></label>
+                <input asp-for="NCR_Status" class="form-control" />
+                <span asp-validation-for="NCR_Status" class="text-danger"></span>
+            </div>
+            <div class="form-group" hidden>
+                <label asp-for="NCR_Stage" class="control-label"></label>
+                <input asp-for="NCR_Stage" class="form-control" />
+                <span asp-validation-for="NCR_Stage" class="text-danger"></span>
+            </div>
+            <div class="form-group" hidden>
+                <label asp-for="PartID" class="control-label">Part ID</label>
+                <input asp-for="PartID" class="form-control"/>
+                <span asp-validation-for="PartID" class="text-danger"></span>
+            </div>
+            <div class="form-group" hidden>
+                <label asp-for="OperationID" class="control-label">Purchasing ID</label>
+                <select asp-for="OperationID" class="form-control" asp-items="ViewBag.OperationID"></select>
+                <span asp-validation-for="OperationID" class="text-danger"></span>
+            </div>
+            <div class="form-group" hidden>
+                <label asp-for="EngineeringID" class="control-label">Engineering ID</label>
+                <select asp-for="EngineeringID" class="form-control" asp-items="ViewBag.EngineeringID"></select>
+                <span asp-validation-for="EngineeringID" class="text-danger"></span>
+            </div>
+
+
+
+
+              if (part != null)            //null checks for part / quality inspection
+                    {
+                        _context.Update(part);
+                        //var defectList = new DefectList
+                        //{
+                        //    PartID = part.ID,
+                        //    DefectID = defectID
+                        //};
+                        await _context.SaveChangesAsync();
+                    }
+                    if (qualityInspection != null)
+                    {
+                        _context.Update(qualityInspection);
+                        await _context.SaveChangesAsync();
+                    }
+                    //Assign ID's
+                    nCR.QualityInspectionID = qualityInspection.ID;
+                    nCR.PartID = part.ID;
+                    
+                    _context.Update(nCR);
+
+                    await OnPostUploadAsync(files, nCR.ID, links);
+                    await _context.SaveChangesAsync();

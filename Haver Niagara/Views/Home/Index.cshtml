@@ -1,0 +1,405 @@
+@model IEnumerable<Haver_Niagara.Models.NCR>
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" type="text/css" href="@Url.Content("~/css/homepage.css")" />
+
+<div>
+
+    <div class="d-flex justify-content-between">
+        <div class="d-flex mt-4 mb-4">
+            <h1 class="">NCR Dashboard</h1>
+
+            <!--If Admin, show drop down for selecting stage of NCR Report-->
+            @if (User.IsInRole("Admin") || (User.IsInRole("Finance")))
+            {
+                <div class="">
+                    <select name="stage" id="stage" class="form-select mt-2 ms-3">
+                        <option value="Engineering" selected>Engineering</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Procurement">Procurement</option>
+                        <option value="Quality">Quality Rep</option>
+                    </select>
+                </div>
+            }
+            @* <!--If Quality Rep, select that stage by default--> *@
+            @if (User.IsInRole("Quality Representative"))
+            {
+                <div class="d-none">
+                    <select name="stage" id="stage" class="form-select mt-2 ms-3">
+                        <option value="Engineering">Engineering</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Procurement">Procurement</option>
+                        <option value="Quality" selected>Quality Rep</option>
+                    </select>
+                </div>
+            }
+            @* <!--If Engineer, select that stage by default--> *@
+            @if (User.IsInRole("Engineer"))
+            {
+                <div class="d-none">
+                    <select name="stage" id="stage" class="form-select mt-2 ms-3">
+                        <option value="Engineering" selected> Engineering</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Procurement">Procurement</option>
+                        <option value="Quality">Quality Rep</option>
+                    </select>
+                </div>
+            }
+            @* <!--If Procurement, select that stage by default--> *@
+            @if (User.IsInRole("Procurement"))
+            {
+                <div class="d-none">
+                    <select name="stage" id="stage" class="form-select mt-2 ms-3">
+                        <option value="Engineering"> Engineering</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Procurement" selected>Procurement</option>
+                        <option value="Quality">Quality Rep</option>
+                    </select>
+                </div>
+            }
+            @* <!--If Operations, select that stage by default--> *@
+            @if (User.IsInRole("Operations"))
+            {
+                <div class="d-none">
+                    <select name="stage" id="stage" class="form-select mt-2 ms-3">
+                        <option value="Engineering"> Engineering</option>
+                        <option value="Operations" selected>Operations</option>
+                        <option value="Procurement">Procurement</option>
+                        <option value="Quality">Quality Rep</option>
+                    </select>
+                </div>
+            }
+        </div>
+        @* If Admin/Quality, show view all reports and create report button *@
+        @if (User.IsInRole("Admin") || (User.IsInRole("Quality Representative")))
+        {
+            <div class="d-flex">
+                <div>
+                    <a asp-controller="Home" asp-action="List" title="view all reports" class="btn btn-outline-primary p-2 me-3 hide-btns">
+                        <span class="me-1">View All</span>
+                    </a>
+                </div>
+                <div>
+                    <a asp-controller="NCRs" asp-action="Create" title="create new report" class="btn btn-primary ps-3 pe-3 pt-1 pb-2 hide-btns">
+                        <span class="me-1">Create Report</span>
+                        <ion-icon name="add-circle-outline" class="create-btn-icon"></ion-icon>
+                    </a>
+                </div>
+            </div>
+        }
+        @* If any other role, show view all button, styled differently *@
+        else
+        {
+            <div>
+                <a asp-controller="Home" asp-action="List" title="view all reports" class="btn btn-primary p-2 hide-btns">
+                    <span class="me-1">View All</span>
+                </a>
+            </div>
+        }
+    </div>
+
+    <div class="dashboard-row card-row">
+
+        @{
+            if (!User.IsInRole("Admin") && (!User.IsInRole("Finance"))) //if not admin the link is disabled (cannot navigate to all reports)
+            {
+                <div class="card activeCard">
+                    <div class="card-content">
+                        <h2>Current Active</h2>
+                        <h3 id="openNCRCount"></h3>
+                        <p>This year</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card activeCard" id="activeThisYear">
+                    <a asp-controller="Home" asp-action="List"
+                       asp-route-SelectedStatus=""
+                       asp-route-ncrStage=""
+                       asp-route-SelectedDate=""
+                       asp-route-SelectedSupplier=""
+                       asp-route-SearchString="@DateTime.Now.Year"
+                       asp-route-actionButton="Filter">
+                        <div class="card-content">
+                            <h2>Current Active</h2>
+                            <h3 id="openNCRCount"></h3>
+                            <p>This year</p>
+                        </div>
+                    </a>
+                </div>
+            }
+        }
+
+        <div class="card stageCard">
+            <a id="dynamicStageLink" title="View all" asp-controller="Home" asp-action="List"
+               asp-route-SelectedStatus=""
+               asp-route-ncrStage=""
+               asp-route-SelectedDate=""
+               asp-route-SelectedSupplier=""
+               asp-route-SearchString="@DateTime.Now.Year"
+               asp-route-actionButton="Filter">
+                <div class="card-content">
+                    <h2><span id="stageName"></span> Stage</h2>
+                    <h3 id="stageCount"></h3>
+                    <p>Currently</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="card closedCard" id="closedThisYear">
+            <a asp-controller="Home" asp-action="List"
+               asp-route-SelectedStatus="false"
+               asp-route-ncrStage=""
+               asp-route-SelectedDate=""
+               asp-route-SelectedSupplier=""
+               asp-route-SearchString="@DateTime.Now.Year"
+               asp-route-actionButton="Filter">
+                <div class="card-content">
+                    <h2>Current Closed</h2>
+                    <h3 id="closedNCRCount"></h3>
+                    <p>This year</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="dashboard-row">
+        <div class="wide-card">
+            <h2>Active NCR Reports (Most Urgent)</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>NCR Number</th>
+                        <th>Date Created</th>
+                        <th>Part Number</th>
+                        <th>Supplier</th>
+                        <th>Stage</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                @* Table Contents *@
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center">
+                                @if (!item.NCR_Status)
+                                {
+                                    <button class="status-btn closedStatus" title="Closed"></button>
+                                }
+                                else
+                                {
+                                    <button class="status-btn activeStatus" title="Active"></button>
+                                }
+                            </td>
+                            @{
+                                int year = DateTime.Now.Year;
+                            }
+                            <td class="text-center">@item.FormattedID</td>
+                            <td class="text-center">@item.NCR_Date.ToString("MMM dd, yyyy")</td>
+                            <td class="text-center">@(item.Part != null ? item.Part.ProductNumber.ToString() : "Product number not found.")</td>
+                            <td>@(item.Part != null && item.Supplier != null ? item.Supplier.Name : "Supplier name not found.")</td>
+                            <td><p class="stage border" id="stage">@Html.DisplayFor(modelItem => item.NCR_Stage)</p></td>
+                            <td class="text-center">
+                                <div>
+                                    @{
+                                        if (User.IsInRole("Engineer"))
+                                        {
+                                            <a href="@Url.Action("EngineerDetails", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Operations"))
+                                        {
+                                            <a href="@Url.Action("OperationsDetails", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Procurement"))
+                                        {
+                                            <a href="@Url.Action("ProcurementDetails", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Quality Representative"))
+                                        {
+                                            <a href="@Url.Action("QualityRepDetailsFinal", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        else if (User.IsInRole("Finance"))
+                                        {
+                                            <a href="@Url.Action("Details", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        else if (User.IsInRole("Admin"))
+                                        {
+                                            <a href="@Url.Action("Details", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                    }
+
+                                    @{
+                                        if (User.IsInRole("Admin"))
+                                        {
+                                            <a href="@Url.Action("Edit", "NCRs", new { id = item.ID })" class="view-btn" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Quality Representative"))
+                                        {
+                                            <a href="@Url.Action("QualityRepresentativeEdit", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Engineer"))
+                                        {
+                                            <a href="@Url.Action("EngineeringEdit", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Procurement"))
+                                        {
+                                            <a href="@Url.Action("ProcurementEdit", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Operations"))
+                                        {
+                                            <a href="@Url.Action("OperationEdit", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @*     <div class="d-flex">
+            <a asp-controller="Home" asp-action="List" class="button">View All</a>
+            <a asp-controller="NCRs" asp-action="Create" class="button">Create New</a>
+            <p class="disclaimer-txt">(Displaying the oldest 5 open NCRs)</p>
+            </div> *@
+        </div>
+    </div>
+
+</div> @* container div *@
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            fetch('/Home/GetOpenNCRCount')
+                .then(response => response.json())
+                .then(data => {
+                    $('#openNCRCount').text(data.count);
+                });
+
+            fetch('/Home/GetClosedNCRCount')
+                .then(response => response.json())
+                .then(data => {
+                    $('#closedNCRCount').text(data.count);
+                });
+
+            // Function to fetch stage-specific counts
+            function fetchStageCount() {
+                const stageSelect = $('#stage'); // id for drop down select list
+                const stageSelectValue = stageSelect.val(); // Get the selected stage value
+
+                const stageSelectText = stageSelect.find("option:selected").text(); // Get the selected stage text
+
+                // Update the stageName span with the selected stage's text
+                $('#stageName').text(stageSelectText);
+
+                // Declare newHref outside the if-else scope
+                let newHref;
+                if (stageSelectText == "Quality Rep") {
+                    newHref = `/Home/List?SelectedStatus=true&ncrStage=QualityRepresentative_Final&SelectedDate=&SelectedSupplier=&SearchString=&actionButton=Filter`;
+                } else {
+                    newHref = `/Home/List?SelectedStatus=true&ncrStage=${stageSelectText}&SelectedDate=&SelectedSupplier=&SearchString=&actionButton=Filter`;
+                }
+
+                // Update only the targeted link's `href` attribute
+                $('#dynamicStageLink').attr('href', newHref);
+
+                fetch(`/Home/Get${stageSelectValue}StageCount`)
+                    .then(response => response.json())
+                    .then(data => {
+                        $('#stageCount').text(data.count);
+                    })
+                    .catch(error => console.error('Error fetching data:', error));
+            }
+
+            // initial stage count when the page loads
+            fetchStageCount();
+
+            // event listener for changes to the stage selection
+            $('#stage').change(fetchStageCount);
+        });
+
+        //set flag for alert when navigating to list page from active reports this year button
+        document.getElementById('activeThisYear').addEventListener('click', function (event) {
+
+            // Set a flag in session storage before navigation
+            sessionStorage.setItem('showAlert', 'true');
+        });
+
+        //set flag for alert when navigating to list page from closed reports this year button
+        document.getElementById('closedThisYear').addEventListener('click', function (event) {
+
+            // Set a flag in session storage before navigation
+            sessionStorage.setItem('showAlertClosed', 'true');
+        });
+
+    </script>
+
+    <!--update status buttons styling based on stage-->
+    <script>
+        $(document).ready(function () {
+
+            $('.stage').each(function () {
+
+                var stage = $(this).text().trim();
+
+                switch (stage) {
+                    case "Engineering":
+                        $(this).addClass('stage-eng2');
+                        break;
+                    case "Operations":
+                        $(this).addClass('stage-oper3');
+                        break;
+                    case "Procurement":
+                        $(this).addClass('stage-procure4');
+                        break;
+                    case "Quality Rep":
+                        $(this).addClass('stage-qual5');
+                        break;
+                    case "Complete":
+                        $(this).addClass('stage-complete');
+                        break;
+                    default:
+                        $(this).addClass('stage');
+                }
+            });
+        });
+    </script>
+}

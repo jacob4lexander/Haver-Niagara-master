@@ -1,0 +1,155 @@
+﻿@page
+@model LoginModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutLoginPage.cshtml";
+}
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<style>
+    .testimg {
+        background: url(../../../../wwwroot/images/HB_Dachma_neg_mono.png);
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    .login-container {
+        border: 2px solid #0C2340;
+        border-radius: 20px;
+        padding: 40px 30px;
+        border-radius: 20px;
+    }
+
+    .report-container {
+        padding: 40px 30px;
+        border-radius: 20px;
+    }
+
+    /*NCR log border*/
+    .list-container {
+        border: 2px solid #0C2340;
+        border-radius: 20px;
+        margin-top: 50px;
+    }
+
+    .moveUp{
+        position: relative;
+        bottom: 10px;
+    }
+
+</style>
+
+@* <h1>@ViewData["Title"]</h1> *@
+<div class="login-container">
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            @* <h1>Login</h1> *@
+            <img src="~/images/logo.png" alt="Haver_Niagara Logo" asp-append-version="true" class="img-fluid" />
+
+            <section>
+                <form id="account" method="post">
+                    @*   <h2>username: admin@outlook.com</h2>
+                    <h2>password: password</h2> *@
+                    <br />
+                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                    <div class="form-floating mb-2">
+                        <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                        <label asp-for="Input.Email" class="form-label">Email</label>
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-2">
+                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                        <label asp-for="Input.Password" class="form-label">Password</label>
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="checkbox mt-1">
+                            <label asp-for="Input.RememberMe" class="form-label">
+                                <input class="form-check-input" asp-for="Input.RememberMe" />
+                                @Html.DisplayNameFor(m => m.Input.RememberMe)
+                            </label>
+                        </span>
+                        <span class="text-end">
+                            <a id="forgot-password" asp-page="./ForgotPassword">Forgot password?</a>
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-end mb-1 moveUp">
+                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
+                    </div>
+                    <div>
+@*                         <p>
+                            <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+                        </p> *@
+  @*                       <p>
+                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
+                        </p> *@
+ @*                        <p>
+                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
+                        </p>  should not be shown because the admin is going to be setting up the accounts, which means it will automatically be confirmed, they would just have to reset password *@
+                  
+
+                        <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+
+                    </div>
+                    @*                       <p>
+                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
+                    </p> *@
+                </form>
+            </section>
+        </div>
+        <small class="mt-4 text-muted d-flex justify-content-center">Login keys for testing</small>
+        <div class="d-flex justify-content-center mt-1">
+            <button id="autoAdminLogin" class="btn btn-outline-primary me-2">Admin <ion-icon name="key-outline" class=""></ion-icon></button>
+            <button id="autoQualityRepLogin" class="btn btn-outline-primary me-2">Quality Rep <ion-icon name="key-outline" class=""></ion-icon></button>
+            <button id="autoEngineerLogin" class="btn btn-outline-primary me-2">Engineer <ion-icon name="key-outline" class=""></ion-icon></button>
+            <button id="autoOperationLogin" class="btn btn-outline-primary me-2">Operations <ion-icon name="key-outline" class=""></ion-icon></button>
+            <button id="autoProcurementLogin" class="btn btn-outline-primary me-2">Procurement <ion-icon name="key-outline" class=""></ion-icon></button>
+            <button id="autoFinanceLogin" class="btn btn-outline-primary">Finance <ion-icon name="key-outline" class=""></ion-icon></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+<script>
+    //created a script for login. the pain and agony of typing in login credentials got to me. 
+
+    //Finds button by their ID's and has attached event listeners - when clicked, go to a function with login credentials and signs
+    //note these passwords do NOT work for any other, or real ACCOUNTS.
+    document.getElementById("autoAdminLogin").addEventListener("click", function () {
+        determineLogin("admin@outlook.com", "rx5g8E^xGYy");
+    });
+    document.getElementById("autoQualityRepLogin").addEventListener("click", function () { 
+            determineLogin("qualityrepresentative@outlook.com", "s?og1oyQ~RD");
+    });
+    document.getElementById("autoEngineerLogin").addEventListener("click", function () {
+        determineLogin("engineer@outlook.com", "5Z6uwE9!R~x");
+    });
+    document.getElementById("autoOperationLogin").addEventListener("click", function () {
+        determineLogin("operations@outlook.com", "Gc3ov?J63sF");
+    });
+    document.getElementById("autoProcurementLogin").addEventListener("click", function () {
+        determineLogin("procurement@outlook.com", "w3gAr?MQ^VD");
+    });
+    document.getElementById("autoFinanceLogin").addEventListener("click", function () {
+        determineLogin("finance@outlook.com", "Gc2JSJ63sF");
+    });
+
+    function determineLogin(email, password) {
+        var Email = document.getElementById("Input_Email");
+        var Password = document.getElementById("Input_Password");
+
+        //Insert The Infooo
+        Email.value = email;
+        Password.value = password;
+
+        //login / submit the form
+        document.getElementById("account").submit();
+    }
+</script>

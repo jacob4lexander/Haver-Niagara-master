@@ -1,0 +1,28 @@
+﻿<br />
+<div class="card mb-sm-3" style="min-width: 18rem;">
+    <h4 class="card-header" id="PartName">Part Names</h4>
+    <div class="card-body">
+        @Html.DropDownList("PartNameID", null, htmlAttributes: new { @size = 6, @class = "form-control" })
+    </div>
+    <div class="card-footer">
+        <a asp-controller="PartName" asp-action="Create">Create</a> |
+        <a asp-controller="PartName" asp-action="Edit" class="linkClick">Edit</a> |
+        <a asp-controller="PartName" asp-action="Delete" class="linkClick">Delete</a>
+    </div>
+</div>
+
+@{
+    var editErr = TempData["ErrorMessage"] as string;
+}
+@if (!string.IsNullOrEmpty(editErr))
+{
+    <div class="toastCreate align-items-center justify-content-center" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+        <div class="toastCreate-header">
+            <strong class="me-auto">Error! Part Name has NCR assigned</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toastCreate" aria-label="Close"></button>
+        </div>
+        <div class="toastCreate-body">
+            @Html.Raw(editErr)
+        </div>
+    </div>
+}

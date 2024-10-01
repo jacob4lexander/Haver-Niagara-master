@@ -1,0 +1,235 @@
+﻿@model X.PagedList.IPagedList<Haver_Niagara.Models.NCR>
+@using X.PagedList;
+@using X.PagedList.Mvc.Core;
+
+﻿@{
+	ViewBag.Title = "NCR List";
+}
+
+<style>
+	h1 {
+		font-size: 38px;
+		font-weight: 600;
+	}
+
+	h2 {
+		font-size: 20px;
+		font-weight: 600;
+	}
+
+	h3 {
+		font-size: 100px;
+		font-weight: 600;
+	}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+<div class="d-flex">
+	<button onclick="window.location.href = '@Url.Action("List", "Home")'" class="btn-back" title="Go Back">
+		<ion-icon name="arrow-back-circle-outline" class="btn-back-icon"></ion-icon>
+	</button>
+	<h1 class="mt-4 mb-1">
+		<span>Voided Reports</span>
+	</h1>
+</div>
+<small class="text-under-heading">NCR reports that have been voided.</small>
+
+@* Success Created MSg *@
+@{
+	var voidsuccessMsg = TempData["VoidSuccessMsg"] as string;
+}
+@* Toasts  *@
+@if (!string.IsNullOrEmpty(voidsuccessMsg))
+{
+	<div class="toast-container" aria-live="assertive" aria-atomic="true">
+		<div id="toastVoid" class="toast" role="alert" data-bs-autohide="false">
+			<div class="toast-header">
+				<ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+				<strong class="me-auto">Success</strong>
+				<small class="text-muted">just now</small>
+				<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+			</div>
+			<div class="toast-body">
+				@Html.Raw(voidsuccessMsg)
+			</div>
+		</div>
+	</div>
+}
+
+<form asp-action="ListVoided" asp-controller="Home" method="get" class="mt-4">
+
+	<div class="table-responsive">
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th class="text-center">
+						Status
+					</th>
+					<th class="text-center">
+						<a asp-action="ListVoided"
+						   asp-route-sortOrder="@ViewBag.FormattedIDSortParam"
+						   asp-route-currentFilter="@ViewBag.CurrentFilter"
+						   asp-route-selectedSupplier="@ViewBag.SelectedSupplier"
+						   asp-route-selectedDate="@ViewBag.SelectedDate"
+						   asp-route-selectedStatus="@ViewBag.SelectedStatus"
+						   asp-route-page="@Model.PageNumber">
+							NCR Number
+						</a>
+					</th>
+					<th class="text-center">
+						<a asp-action="ListVoided"
+						   asp-route-sortOrder="@ViewBag.DateSortParam"
+						   asp-route-currentFilter="@ViewBag.CurrentFilter"
+						   asp-route-selectedSupplier="@ViewBag.SelectedSupplier"
+						   asp-route-selectedDate="@ViewBag.SelectedDate"
+						   asp-route-selectedStatus="@ViewBag.SelectedStatus"
+						   asp-route-page="@Model.PageNumber">
+							Date Created
+						</a>
+					</th>
+					<th class="text-center">
+						<a asp-action="ListVoided"
+						   asp-route-sortOrder="@ViewBag.POSortParam"
+						   asp-route-currentFilter="@ViewBag.CurrentFilter"
+						   asp-route-selectedSupplier="@ViewBag.SelectedSupplier"
+						   asp-route-selectedDate="@ViewBag.SelectedDate"
+						   asp-route-selectedStatus="@ViewBag.SelectedStatus"
+						   asp-route-page="@Model.PageNumber">
+							Part Number
+						</a>
+					</th>
+					<th>
+						<a asp-action="ListVoided"
+						   asp-route-sortOrder="@ViewBag.SupplierSortParam"
+						   asp-route-currentFilter="@ViewBag.CurrentFilter"
+						   asp-route-selectedSupplier="@ViewBag.SelectedSupplier"
+						   asp-route-selectedDate="@ViewBag.SelectedDate"
+						   asp-route-selectedStatus="@ViewBag.SelectedStatus"
+						   asp-route-page="@Model.PageNumber">
+							Supplier
+						</a>
+					</th>
+					<th>Stage</th>
+					<th class="text-center"></th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var item in Model)
+				{
+					<tr>
+						<td class="text-center">
+							@if (!item.NCR_Status)
+							{
+								<button class="status-btn closedStatus" title="Closed"></button>
+							}
+							else
+							{
+								<button class="status-btn activeStatus" title="Active"></button>
+							}
+						</td>
+						@{
+							int year = DateTime.Now.Year;
+						}
+						<td class="text-center">@item.FormattedID</td>
+						<td class="text-center">@item.NCR_Date.ToString("MMM dd, yyyy")</td>
+						<td class="text-center">@(item.Part?.ProductNumber.ToString() ?? "Part Number Not Found")</td>
+						<td>@(item.Supplier.Name.ToString() ?? "Supplier Name Not Found")</td>
+						<td><p class="stage" id="stage">@Html.DisplayFor(modelItem => item.NCR_Stage)</p></td>
+						<td class="text-center">
+							<div>
+								<a href="@Url.Action("Details", "NCRs", new { id = item.ID })" class="view-btn me-1" title="View NCR report">
+									<ion-icon name="eye"></ion-icon>
+								</a>
+
+								<a href="@Url.Action("UnVoid", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Unvoid NCR report">
+									<ion-icon name="arrow-undo-outline"></ion-icon>
+								</a>
+
+							</div>
+
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+	<br />
+
+	<!--Paging NAV Bar-->
+	@{
+		var prevDisabled = !Model.HasPreviousPage ? "disabled='disabled'" : "";
+		var nextDisabled = !Model.HasNextPage ? "disabled='disabled'" : "";
+	}
+	<nav aria-label="Page navigation">
+		<ul class="pagination justify-content-center pagination-sm" style="margin:20px 0">
+			<li class="page-item">
+				<button type="submit" name="page" value="1" @prevDisabled class="btn page-link">
+					<span aria-hidden="true">&lArr;</span>&nbsp;First
+				</button>
+			</li>
+			<li class="page-item">
+				<button type="submit" name="page" @prevDisabled value="@(Model.PageNumber - 1)" class="btn page-link">
+					<span aria-hidden="true">&larr;</span>&nbsp;Previous
+				</button>
+			</li>
+			<li class="page-item active">
+				<button type="button" disabled="disabled" class="btn page-link">
+					Page @Model.PageNumber of @Model.PageCount
+				</button>
+			</li>
+			<li class="page-item">
+				<button type="submit" name="page" @nextDisabled value="@(Model.PageNumber + 1)" class="btn page-link">
+					Next&nbsp;<span aria-hidden="true">&rarr;</span>
+				</button>
+			</li>
+			<li class="page-item">
+				<button type="submit" name="page" @nextDisabled value="@Model.PageCount" class="btn page-link">
+					Last&nbsp;<span aria-hidden="true">&rArr;</span>
+				</button>
+			</li>
+		</ul>
+	</nav>
+
+</form>
+
+<!--update status buttons styling based on stage-->
+@section scripts {
+	<script>
+		$(document).ready(function () {
+
+			$('.stage').each(function () {
+
+				var stage = $(this).text().trim();
+
+				switch (stage) {
+					case "Engineering":
+						$(this).addClass('stage-eng2');
+						break;
+					case "Operations":
+						$(this).addClass('stage-oper3');
+						break;
+					case "Procurement":
+						$(this).addClass('stage-procure4');
+						break;
+					case "Quality Rep":
+						$(this).addClass('stage-qual5');
+						break;
+					case "Complete":
+						$(this).addClass('stage-complete');
+						break;
+					default:
+						$(this).addClass('stage');
+				}
+			});
+		});
+	</script>
+	<script>
+		$(document).ready(function () {
+			$('#toastVoid').toast('show')
+		});
+	</script>
+}
+

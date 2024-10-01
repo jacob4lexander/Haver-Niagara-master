@@ -1,0 +1,152 @@
+﻿@model Haver_Niagara.ViewModels.EmployeeAdminVM
+
+<style>
+    .row > .col-md-4:first-child {
+        margin-bottom: 30px;
+    }
+
+    .form-check {
+        display: block; 
+        margin-bottom: 10px; 
+    }
+
+    .form-check-input {
+        margin-right: 5px;
+    }
+
+    table {
+        width: 100%; 
+    }
+
+    td {
+        width: 100%; 
+        padding-right: 10px;
+    }
+</style>
+
+<h2>Edit</h2>
+
+<hr />
+
+<form asp-action="Edit">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row">
+        <div class="col-md-4">
+            <input type="hidden" asp-for="ID" />
+            <div class="form-group">
+                <label asp-for="FirstName" class="control-label"></label>
+                <input asp-for="FirstName" class="form-control"  autofocus />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LastName" class="control-label"></label>
+                <input asp-for="LastName" class="form-control" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+                <div>
+                    Note:  Changing Email will reset the password for the new Login and the user will need to use Forgot Password with the new Email.
+                </div>
+            </div>
+
+            <div class="form-group form-switch">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="Active" /> @Html.DisplayNameFor(model => model.Active)
+                </label>
+                @{
+                    if (Model.Active == true)
+                    {
+                                    <div> 
+                                        <strong>Making a user inactive will cause their login to the system will also be removed</strong>
+                                    </div>
+                    }
+                    else
+                    {
+                                    <div><strong>If you make this user active, let them know to use Forgot Password to set a new one for this email address.</strong></div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="form-group form-check">
+                <label asp-for="UserRoles" class="control-label"></label>
+            <table>
+                <tr>
+                @{
+                    int cnt = 0;
+                    List<Haver_Niagara.ViewModels.RoleVM> roles = ViewBag.Roles;
+                    foreach (var role in roles)
+                    {
+                        bool isAdmin = role.RoleName == "Admin";
+                        if (isAdmin)
+                            continue;
+                        if (cnt++ % 1 == 0)
+                        {
+                            @:</tr><tr>
+                        }
+                        @:<td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" required
+                                       id="@role.RoleName-CheckBox"
+                                       name="selectedRoles"
+                                       value="@role.RoleName"
+                                       @(Html.Raw(role.Assigned ? "checked=\"checked\"" : ""))/>               
+                                <label class="form-check-label" "@role.RoleName-CheckBox">@role.RoleName  &nbsp;&nbsp;</label>
+                            </div>
+                        @:</td>
+                    }
+                }
+                </tr>
+            </table>
+            </div>
+        </div>  
+    </div>
+    
+    <div class="form-group">
+        <input type="submit" id="saveEmployee" value="Save" class="btn btn-primary" />
+    </div>
+</form>
+
+<div>
+    <partial name="_BackToList" />
+</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Check email address and disable checkboxes if it matches
+        var userEmail = '@Model.Email'; // Assuming Model.Email contains the user's email address
+        var adminEmail = 'admin@outlook.com';
+
+        if (userEmail === adminEmail) {
+            // Disable checkboxes, email input, and active button
+            $('.role-checkbox').prop('disabled', true);
+            $('input[name="Email"]').prop('disabled', true);
+            $('input[name="Active"]').prop('disabled', true);
+            $('input[name="FirstName"]').prop('disabled', true);
+            $('input[name="LastName"]').prop('disabled', true);
+            // Set the admin checkbox to checked and disabled
+            $('#Admin-CheckBox').prop('checked', true).prop('disabled', true);
+            // Hide the save button
+            $('#saveEmployee').hide();
+            // Ensure the admin role is always selected
+            $('input[name="selectedRoles"][value="Admin"]').prop('checked', true);
+        }
+
+        // Function to uncheck other checkboxes
+        function uncheckOtherCheckboxes(checkbox) {
+            $('.role-checkbox').not(checkbox).prop('checked', false);
+        }
+
+        // Change event handler for checkboxes
+        $('.role-checkbox').on('change', function () {
+            uncheckOtherCheckboxes($(this));
+        });
+    </script>
+
+}
+
+

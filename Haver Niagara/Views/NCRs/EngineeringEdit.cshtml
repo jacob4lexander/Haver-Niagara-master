@@ -1,0 +1,354 @@
+﻿@using System.ComponentModel.DataAnnotations
+@model Haver_Niagara.Models.NCR
+
+@{
+    ViewData["Title"] = $"Editing {@Model.FormattedID} - Engineering";
+}
+
+<link rel="stylesheet" type="text/css" href="@Url.Content("~/css/ncrForm.css")" />
+
+
+@* h1 *@
+<div>
+    <div class="text-muted">
+        @* Should show previous ncr number if one is linked *@
+        @{
+            var OldNCRNumber_id = ViewBag.OldNCRID != null ? $"Previous NCR No. {DateTime.UtcNow.Year}-{ViewBag.OldNCRID.ToString().PadLeft(3, '0')}" : "";
+        }
+        <span class="m2-2">
+            @OldNCRNumber_id
+        </span>
+    </div>
+</div>
+<div class="pt-2 pb-0 ps-1 fs-5 d-flex justify-content-between form-labels">
+    <dl class="d-flex justify-content-between">
+        <dt>
+            @Html.DisplayNameFor(model => model.FormattedID)
+        </dt>
+        <dd class="ms-2">
+            @Html.DisplayFor(model => model.FormattedID)
+        </dd>
+    </dl>
+    <div>
+
+        <dl class="d-flex justify-content-between">
+            <dt>
+                <label asp-for="NCR_Date" class="control-label"></label>
+            </dt>
+            <dd class="ms-2">
+                <input asp-for="NCR_Date" class="form-control" type="date" disabled />
+                <span asp-validation-for="NCR_Date" class="text-danger"></span>
+            </dd>
+        </dl>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <!--back to admin edit-->
+            <div class="d-flex justify-content-end">
+                <a href="@Url.Action("Edit", "NCRs", new { id = @Model.ID })" class="btn btn-close ms-3" title="Cancel" id="cancel-button"></a>
+            </div>
+        }
+
+    </div>
+</div>
+@if (!User.IsInRole("Admin"))
+{
+    <div class="d-flex justify-content-between text-muted mb-3 small-stage-labels">
+        <!--previous section = quality rep-->
+        <a asp-action="QualityRepDetails" asp-route-id="@Model?.ID" class="btn-forward" title="previous section">
+            <ion-icon name="arrow-back-circle-outline" class="btn-forward-icon"></ion-icon>
+        </a>
+        @if (Model.NCR_Stage == NCRStage.Engineering)
+        {
+            <div>
+                @foreach (var ncrStage in Enum.GetValues(typeof(NCRStage)))
+                {
+                    <div class="form-check form-check-inline">
+                        <input type="radio" asp-for="NCR_Stage" disabled class="form-check-input" value="@ncrStage" id="@($"ncrStage{ncrStage}")" />
+                        <label for="@($"ncrStage{ncrStage}")">@((typeof(NCRStage).GetMember(ncrStage.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label>
+                    </div>
+                }
+            </div>
+        }
+        <!--back to engineer details-->
+        <a href="@Url.Action("EngineerDetails", "NCRs", new { id = @Model.ID })" class="btn-forward" title="Close" id="cancel-button">
+            <ion-icon name="close-circle-outline" class="btn-forward-icon"></ion-icon>
+        </a>
+    </div>
+}
+<!--hidden button, not functional - just for styling-->
+@*     <button class="btn-forward pe-none">
+    <ion-icon name="arrow-forward-circle-outline" class="btn-forward-icon bg-white "></ion-icon>
+    </button> *@
+
+<form class="" asp-action="EngineeringEdit" id="myForm" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="ID" />
+    <div class="form-container">
+        @if (User.IsInRole("Admin") || User.IsInRole("Engineer"))
+        {
+            @* Engineering Section *@
+            <div class="section section-eng">
+                <div class="m-1 p-2 ps-3 fs-6 section-header d-flex justify-content-between">
+                    <span class="">2. Engineering</span>
+                    <button class="border border-secondary rounded p-2 btn" id="btnFillCreate" title="Fill Form"></button>
+                </div>
+
+                @* row 7 *@
+                <div class="row m-1 border">
+                    <div class="col-sm-12 pt-3 ps-3 justify-content-start">
+                        <dl>
+                            <dt>
+                                Review by HBC Engineering<span class="text-danger"> *</span> <span class="fw-light">(indicate disposition by checking one of the following)</span>
+                            </dt>
+                            <dd class="mt-2">
+                                <div>
+                                    @*          Loops through and gets each enumeration value, then for each display the value and create
+                                radio / label for. Then model check to see if it matches the decision in iteration
+                                and if it does, then use checked property, else nothing *@
+                                    @foreach (var engineerDisposition in Enum.GetValues(typeof(EngineeringDisposition)))
+                                    {
+                                        <div class="form-check form-check-inline">
+                                            <input type="radio" asp-for="Engineering.EngineeringDisposition" required class="form-check-input" value="@engineerDisposition" id="@($"engineerDisposition{engineerDisposition}")" />
+                                            <label for="@($"engineerDisposition{engineerDisposition}")">@((typeof(EngineeringDisposition).GetMember(engineerDisposition.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label><br />
+                                        </div>
+                                    }
+                                    <span class="text-danger" asp-validation-for="Engineering.EngineeringDisposition"></span>
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                @* row 8 *@
+                <div class="row m-1 border">
+                    <div class="col-sm-12 pt-3 ps-3 d-flex justify-content-start">
+                        <dl>
+                            <dt>
+                                Does Customer require notification of NCR?<span class="text-danger"> *</span> <span class="fw-light">(If "Yes" then raise message to customer detailing issues)</span>
+                            </dt>
+                            <dd class="mt-2">
+                                <div class="d-flex">
+                                    @Html.RadioButtonFor(model => model.Engineering.CustomerNotify, true, new { @checked = Model.Engineering != null && Model.Engineering.CustomerNotify, @class = "me-2" })
+                                    <label class="me-4">Yes</label>
+
+                                    @Html.RadioButtonFor(model => model.Engineering.CustomerNotify, false, new { @checked = Model.Engineering != null && !Model.Engineering.CustomerNotify, id = "noNotify", @class = "me-2" })
+                                    <label>No</label>
+                                    <span class="ms-3 text-danger" asp-validation-for="Engineering.CustomerNotify"></span>
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                @* row 9 *@
+                <div class="row m-1">
+                    <div class="col-sm-12 border pt-3 ps-3">
+                        <dl>
+                            <dt>
+                                Disposition <span class="fw-light">(Sequence of work steps required when "repair" or "rework" indicated)</span>
+                            </dt>
+                            <dd class="mt-1">
+                                <div class="d-flex">
+                                    <textarea asp-for="Engineering.DispositionNotes" id="dispositionNotes" class="form-control" rows="3" cols="30"></textarea>
+                                    <span asp-validation-for="Engineering.DispositionNotes" class="text-danger"></span>
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                @* row 10 *@
+                <div class="row m-1 border">
+                    <div class="col-sm-6 pt-3 ps-3">
+                        <div class="d-flex justify-content-start">
+                            <dl>
+                                <dt>
+                                    Does the drawing require updating?<span class="text-danger"> *</span>
+                                </dt>
+                                <dd class="mt-2">
+                                    <div class="d-flex">
+                                        @Html.RadioButtonFor(model => model.Engineering.DrawUpdate, true, new { @checked = Model.Engineering != null && Model.Engineering.DrawUpdate, @class = "me-2" })
+                                        <label class="me-4">Yes</label>
+
+                                        @Html.RadioButtonFor(model => model.Engineering.DrawUpdate, false, new { @checked = Model.Engineering != null && !Model.Engineering.DrawUpdate, id="noDrawUpdate", @class = "me-2" })
+                                        <label>No</label>
+                                        <span class="ms-3 text-danger" asp-validation-for="Engineering.DrawUpdate"></span>
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="row ms-1 mb-0 d-flex">
+                            <span class="col-sm">
+                                <dl>
+                                    @* Original Revision Number *@
+                                    <dt class="fw-normal">
+                                        <label asp-for="Engineering.RevisionOriginal" class="control-label"></label>
+                                        <input asp-for="Engineering.RevisionOriginal" class="form-control" />
+                                        <span asp-validation-for="Engineering.RevisionOriginal" class="text-danger"></span>
+                                    </dt>
+                                </dl>
+                            </span>
+                            <span class="col-sm">
+                                @* Revision Date *@
+                                <div class="form-group">
+                                    <label asp-for="Engineering.RevisionDate" class="control-label"></label>
+                                    <input asp-for="Engineering.RevisionDate" type="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control" />
+                                    <span asp-validation-for="Engineering.RevisionDate" class="text-danger"></span>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="row ms-1 mb-0">
+                            <span class="col-sm">
+                                <dl>
+                                    @* Revision Updated Number *@
+                                    <dt class="fw-normal">
+                                        <div class="form-group">
+                                            <label asp-for="Engineering.RevisionUpdated" class="control-label"></label>
+                                            <input asp-for="Engineering.RevisionUpdated" class="form-control" />
+                                            <span asp-validation-for="Engineering.RevisionUpdated" class="text-danger"></span>
+                                        </div>
+                                    </dt>
+
+                                </dl>
+                            </span>
+                            <span class="col-sm">
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 border pt-3 ps-3">
+                        <div class="row">
+                            <dl class="d-flex m-0">
+                                <dt class="col-sm">
+                                    Engineering's Name<span class="text-danger"> *</span>
+                                </dt>
+                                <dd class="col-sm ms-2">
+                                    <input asp-for="Engineering.Name" value="@ViewBag.FullName" class="form-control" />
+                                    <span asp-validation-for="Engineering.Name" class="text-danger"></span>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="row">
+                            <dl class="d-flex">
+                                <dt class="col-sm">
+                                    Date
+                                </dt>
+                                <dd class="col-sm ms-2">
+                                    <div class="form-group">
+                                        <input asp-for="Engineering.Date" type="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control" />
+                                        <span asp-validation-for="Engineering.Date" class="text-danger"></span>
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!--action buttons-->
+    @if (Model.NCR_Stage != NCRStage.Engineering)
+    {
+        <div class="d-flex justify-content-end mt-3">
+            @if (!User.IsInRole("Admin"))
+            {
+                <!--cancel goes back to details view-->
+                <div class="mt-2 me-3">
+                    <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="EngineerDetails" class="btn btn-outline-danger">Cancel</a>
+                </div>
+            }
+            else
+            {
+                <!--back to admin edit-->
+                <div class="mt-2 me-3">
+                    <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="Edit" class="btn btn-outline-danger">Cancel</a>
+                </div>
+            }
+            <!--save report-->
+            <span class="mt-2">
+                <input type="submit" value="Save Changes" class="btn btn-primary" />
+            </span>
+        </div>
+    }
+    <!--mark as completed button (should submit form if all required fields are filled and email next department)-->
+    @if (Model.NCR_Stage == NCRStage.Engineering)
+    {
+        <div class="d-flex flex-wrap justify-content-between">
+
+            <div class="d-flex">
+                @if (!User.IsInRole("Admin"))
+                {
+                    <!--back to details view-->
+                    <div class="mt-2 me-3">
+                        <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="EngineerDetails" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                }
+                else
+                {
+                    <!--back to admin edit-->
+                    <div class="mt-2 me-3">
+                        <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="Edit" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                }
+                <!--save report-->
+                <span class="mt-2">
+                    <input type="submit" value="Save Changes" class="btn btn-outline-primary" />
+                </span>
+            </div>
+
+            <!--Mark as completed-->
+            <div class="d-flex">
+                <span class="mt-2 ms-2">
+                    <input type="submit" id="markCompletedBtn" value="Section Completed" title="Mark section as completed" class="btn btn-primary order-last" />
+                </span>
+            </div>
+
+        </div>
+    }
+
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+
+        <!--alert for cancel button-->
+        <script>
+            $('#cancel-button').click(function (event) {
+                // Show the confirmation dialog and store the user's response
+                var userConfirmed = confirm('Are you sure you want to cancel? All progress will be lost.');
+
+                // If the user clicks 'Cancel', prevent the default button action
+                if (!userConfirmed) {
+                    event.preventDefault();
+                }
+            });
+        </script>
+        <!-- PRE-FILL DATA WHEN BUTTON CLICKED -->
+        <script>
+            document.getElementById('btnFillCreate').addEventListener('click', function (event) {
+                event.preventDefault();
+
+                document.querySelector(`input[name="Engineering.EngineeringDisposition"][value="Rework"]`).checked = true; //review by HBC Engineering
+                document.getElementById('noNotify').checked = true; //does customer require notification
+                document.getElementById('dispositionNotes').value = "fill with JB weld and sand flat"; //sequence of work steps required
+                document.getElementById('noDrawUpdate').checked = true;
+            });
+        </script>
+        <script>
+            document.getElementById('myForm').addEventListener('submit', function (event) {
+                // Get the value of the clicked submit button
+                var clickedButtonValue = event.submitter.value;
+
+                // If the clicked button is "Mark as Completed"
+                if (clickedButtonValue === 'Section Completed') {
+                    // Set a hidden field value to indicate mark as completed
+                    var hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'MarkAsCompleted';
+                    hiddenField.value = true;
+                    this.appendChild(hiddenField);
+                }
+            });
+        </script>
+    }
+}
+

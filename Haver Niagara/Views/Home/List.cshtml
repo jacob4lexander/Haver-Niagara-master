@@ -1,0 +1,567 @@
+﻿@model X.PagedList.IPagedList<Haver_Niagara.Models.NCR>
+@using X.PagedList;
+@using X.PagedList.Mvc.Core;
+
+﻿@{
+    ViewBag.Title = "NCR List";
+}
+
+<style>
+    h1 {
+        font-size: 38px;
+        font-weight: 600;
+        color: #1C335E;
+    }
+
+    h2 {
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    h3 {
+        font-size: 100px;
+        font-weight: 600;
+    }
+
+    .bootstrap-select .btn {
+        color: #333 !important; 
+    }
+</style>
+
+<!--Font Montserrat-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<!-- Bootstrap-select -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+
+<div>
+    <div class="d-flex justify-content-between">
+        <div class="d-flex button-container">
+            <h1> Non-Conformance Log</h1>
+            <div>
+                @if (User.IsInRole("Admin") || (User.IsInRole("Quality Representative")))
+                {
+                    <div class="create-btn">
+                        <a asp-controller="NCRs" asp-action="Create" class="btn btn-primary p-2">
+                            <ion-icon name="add-circle-outline" class="create-btn-icon"></ion-icon>
+                            <span class="me-1">Create Report</span>
+                        </a>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
+    @* Success Created MSg *@
+    @{
+        var createsuccessMsg = TempData["CreateSuccessMsg"] as string;
+        var editsuccessMsg = TempData["EditSuccessMsg"] as string;
+        var editErr = TempData["ErrorMessage"] as string;
+        var unvoidsuccessMsg = TempData["UnvoidSuccessMsg"] as string;
+    }
+    @* Toasts  *@
+    @if (!string.IsNullOrEmpty(createsuccessMsg))
+    {
+        <div class="toast-container" aria-live="assertive" aria-atomic="true">
+            <div id="toastCreate" class="toast" role="alert" data-bs-autohide="false">
+                <div class="toast-header">
+                    <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+                    <strong class="me-auto">Success</strong>
+                    <small class="text-muted">just now</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    @Html.Raw(createsuccessMsg)
+                </div>
+            </div>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(editsuccessMsg))
+    {
+        <div class="toast-container" aria-live="assertive" aria-atomic="true">
+            <div id="toastEdit" class="toast" role="alert" data-bs-autohide="false">
+                <div class="toast-header">
+                    <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+                    <strong class="me-auto">Success</strong>
+                    <small class="text-muted">just now</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    @Html.Raw(editsuccessMsg)
+                </div>
+            </div>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(editErr))
+    {
+        <div class="toast-container" aria-live="assertive" aria-atomic="true">
+            <div id="toastEditCheck" class="toast" role="alert" data-bs-autohide="false">
+                <div class="toast-header">
+                    <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+                    <strong class="me-auto">Error</strong>
+                    <small class="text-muted">just now</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    @Html.Raw(editErr)
+                </div>
+            </div>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(unvoidsuccessMsg))
+    {
+        <div class="toast-container" aria-live="assertive" aria-atomic="true">
+            <div id="toastUnvoid" class="toast" role="alert" data-bs-autohide="false">
+                <div class="toast-header">
+                    <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+                    <strong class="me-auto">Success</strong>
+                    <small class="text-muted">just now</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    @Html.Raw(unvoidsuccessMsg)
+                </div>
+            </div>
+        </div>
+    }
+</div>
+<form asp-action="List" asp-controller="Home" method="get">
+    <div class="form-horizontal">
+        <button class="mb-3 btn border" type="button" data-bs-toggle="collapse" id="filterToggle" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
+            Filter/Search
+        </button><br />
+        <div class="collapse" id="collapseFilter">
+            <div class="card card-body bg-light mb-2 d-flex">
+
+                @{
+                    if (User.IsInRole("Admin")) //if not admin the link is disabled (cannot navigate to all reports)
+                    {
+                        <div class="row">
+                            <div class="col-sm">
+                                <div class="form-group">
+                                    <label class="control-label">Status</label>
+                                    <div>
+                                        @Html.DropDownList("SelectedStatus", new List<SelectListItem>
+                                {
+                                new SelectListItem { Text = "Active", Value = "true" },
+                                new SelectListItem { Text = "Closed", Value = "false" }
+                                }, new { @class = "form-control border" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm">
+                                <div class="form-group">
+                                    <label class="control-label">Stage</label>
+                                    <div>
+                                        @Html.DropDownList("ncrStage", (IEnumerable<SelectListItem>)ViewBag.NCRStageList, "Select Stage", new { @class = "form-control border" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm">
+                                <div class="form-group">
+                                    <label class="control-label">Date Created</label>
+                                    <input type="date" id="SelectedDate" name="SelectedDate" class="form-control border">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2 mb-2">
+
+                            <div class="col-sm">
+                                <div class="form-group">
+                                    <label class="control-label">Supplier</label>
+                                    <div>
+                                        @Html.DropDownList("SelectedSupplier", (SelectList)ViewBag.SupplierList, "Select Supplier", new { @class = "form-control selectpicker border", data_live_search = "true", data_style = "btn", data_dropup_auto = "false", id = "ddlSupplier" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm">
+                                <div class="form-group">
+                                    <label class="control-label">Part Number / NCR Number</label>
+                                    @Html.TextBox("SearchString", null, new { @class = "form-control border", placeholder = "Enter a part or NCR number" })
+                                </div>
+                            </div>
+                            <div class="col-sm-auto mt-4">
+                                <div class="form-group">
+                                    <button type="submit" name="actionButton" value="Filter" class="btn btn-primary me-2">Search</button>
+                                    <a href="@Url.Action("ClearFilters", "Home")" class="btn btn-outline-dark">Clear</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else //remove status and stage filter if not admin
+                    {
+                        <div class="row">
+                            <div class="col-sm-2">
+                                <div class="form-group">
+                                    <label class="control-label">Status</label>
+                                    <div>
+                                        @Html.DropDownList("SelectedStatus", new List<SelectListItem>
+                                {
+                                new SelectListItem { Text = "Active", Value = "true" },
+                                new SelectListItem { Text = "Closed", Value = "false" } //Defaults to closed selected if finance is logged in Selected = User.IsInRole("Finance")
+                                }, new { @class = "form-control border" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm">
+                                <div class="form-group">
+                                    <label class="control-label">Supplier</label>
+                                    <div>
+                                        @Html.DropDownList("SelectedSupplier", (SelectList)ViewBag.SupplierList, "Select Supplier", new { @class = "form-control selectpicker border", data_live_search = "true", data_style = "btn", data_dropup_auto = "false", id = "ddlSupplier" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm">
+                                <div class="form-group">
+                                    <label class="control-label">Part / NCR Number</label>
+                                    @Html.TextBox("SearchString", null, new { @class = "form-control border", placeholder = "part # or NCR #" })
+                                </div>
+                            </div>
+                            <div class="col-sm-2">
+                                <div class="form-group">
+                                    <label class="control-label">Date Created</label>
+                                    <input type="date" id="SelectedDate" name="SelectedDate" class="form-control border">
+                                </div>
+                            </div>
+                            <div class="col-sm-auto mt-4">
+                                <div class="form-group">
+                                    <button type="submit" name="actionButton" value="Filter" class="btn btn-primary me-2">Search</button>
+                                    <a href="@Url.Action("ClearFilters", "Home")" class="btn btn-outline-dark">Clear</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th class="text-center">
+                        Status
+                    </th>
+                    <th class="text-center">
+                        <a asp-action="List"
+                           asp-route-sortOrder="@ViewBag.FormattedIDSortParam"
+                           asp-route-currentFilter="@ViewBag.CurrentFilter"
+                           asp-route-selectedSupplier="@ViewBag.SelectedSupplier"
+                           asp-route-selectedDate="@ViewBag.SelectedDate"
+                           asp-route-selectedStatus="@ViewBag.SelectedStatus"
+                           asp-route-page="@Model.PageNumber">
+                            NCR Number
+                        </a>
+                    </th>
+                    <th class="text-center">
+                        <a asp-action="List"
+                           asp-route-sortOrder="@ViewBag.DateSortParam"
+                           asp-route-currentFilter="@ViewBag.CurrentFilter"
+                           asp-route-selectedSupplier="@ViewBag.SelectedSupplier"
+                           asp-route-selectedDate="@ViewBag.SelectedDate"
+                           asp-route-selectedStatus="@ViewBag.SelectedStatus"
+                           asp-route-page="@Model.PageNumber">
+                            Date Created
+                        </a>
+                    </th>
+                    <th class="text-center">
+                        <a asp-action="List"
+                           asp-route-sortOrder="@ViewBag.POSortParam"
+                           asp-route-currentFilter="@ViewBag.CurrentFilter"
+                           asp-route-selectedSupplier="@ViewBag.SelectedSupplier"
+                           asp-route-selectedDate="@ViewBag.SelectedDate"
+                           asp-route-selectedStatus="@ViewBag.SelectedStatus"
+                           asp-route-page="@Model.PageNumber">
+                            Part Number
+                        </a>
+                    </th>
+                    <th>
+                        <a asp-action="List"
+                           asp-route-sortOrder="@ViewBag.SupplierSortParam"
+                           asp-route-currentFilter="@ViewBag.CurrentFilter"
+                           asp-route-selectedSupplier="@ViewBag.SelectedSupplier"
+                           asp-route-selectedDate="@ViewBag.SelectedDate"
+                           asp-route-selectedStatus="@ViewBag.SelectedStatus"
+                           asp-route-page="@Model.PageNumber">
+                            Supplier
+                        </a>
+                    </th>
+                    <th>
+                        <a asp-action="List"
+                           asp-route-sortOrder="@ViewBag.NCRStageSortParam"
+                           asp-route-currentFilter="@ViewBag.CurrentFilter"
+                           asp-route-selectedSupplier="@ViewBag.SelectedSupplier"
+                           asp-route-selectedDate="@ViewBag.SelectedDate"
+                           asp-route-selectedStatus="@ViewBag.SelectedStatus"
+                           asp-route-page="@Model.PageNumber">
+                            Stage
+                        </a>
+                    </th>
+                    <th class="text-center"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {                           
+                    <tr>
+                        <td class="text-center">
+                            @if (!item.NCR_Status)
+                            {
+                                <button class="status-btn closedStatus" title="Closed"></button>
+                            }
+                            else
+                            {
+                                <button class="status-btn activeStatus" title="Active"></button>
+                            }
+                        </td>
+                        @{
+                            int year = DateTime.Now.Year;
+                        }
+                        <td class="text-center">@item.FormattedID</td>
+                        <td class="text-center">@item.NCR_Date.ToString("MMM dd, yyyy")</td>
+                        <td class="text-center">@(item.Part?.ProductNumber.ToString() ?? "Product Number Not Found")</td>
+                        <td>@(item.Supplier.Name.ToString() ?? "Supplier Name Not Found")</td>
+                        <td><p class="stage border" id="stage">@Html.DisplayFor(modelItem => item.NCR_Stage)</p></td>
+                        <td class="text-center">
+                            <div class="d-flex">
+
+                                <span>
+                                    @{
+                                        if (User.IsInRole("Engineer"))
+                                        {
+                                            <a href="@Url.Action("EngineerDetails", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Operations"))
+                                        {
+                                            <a href="@Url.Action("OperationsDetails", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Procurement"))
+                                        {
+                                            <a href="@Url.Action("ProcurementDetails", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Quality Representative"))
+                                        {
+                                            <a href="@Url.Action("QualityRepDetailsFinal", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Finance"))
+                                        {
+                                            <a href="@Url.Action("Details", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                        else if (User.IsInRole("Admin"))
+                                        {
+                                            <a href="@Url.Action("Details", "NCRs", new { id = item.ID })" class="view-btn" title="View NCR report">
+                                                <ion-icon name="eye"></ion-icon>
+                                            </a>
+                                        }
+                                    }
+                                </span>
+
+                                <span>
+                                    @if (item.NCR_Status)
+                                    {
+                                        //Setting Up Different Edit Actions Depending on Who's Signed in.
+                                        if (User.IsInRole("Admin")) // Focus on fixing indivial edits for parts of the form, and then focus on fixing admin
+                                        {
+                                            <a href="@Url.Action("Edit", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Quality Representative"))
+                                        {
+                                            <a href="@Url.Action("QualityRepresentativeEdit", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Engineer"))
+                                        {
+                                            <a href="@Url.Action("EngineeringEdit", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Operations"))
+                                        {
+                                            <a href="@Url.Action("OperationEdit", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                        if (User.IsInRole("Procurement"))
+                                        {
+                                            <a href="@Url.Action("ProcurementEdit", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Edit NCR report">
+                                                <ion-icon name="create"></ion-icon>
+                                            </a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <!-- Download Report button appears if ncr is closed -->
+                                        <form asp-action="DetailsPrint" asp-controller="NCRs" asp-route-id="@item.ID" method="post">
+                                            <button type="submit" class="download-btn">
+                                                <ion-icon name="download" class="download-icon"></ion-icon>
+                                            </button>
+                                        </form>
+                                    }
+                                </span>
+
+                                <span>
+                                    <!-- Void Report button appears if user is admin -->
+                                    @if (User.IsInRole("Admin") && item.NCR_Status)
+                                    {
+                                        <a href="@Url.Action("Void", "NCRs", new { id = item.ID })" class="view-btn ms-2" title="Void NCR report">
+                                            <ion-icon name="ban-outline"></ion-icon>
+                                        </a>
+                                    }
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <!--show voided list button for admin-->
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Home" asp-action="ListVoided" class="btn me-3 btn-secondary">Voided <ion-icon name="ban-outline" class="archive-btn-icon ms-1"></ion-icon></a>
+        }
+        <!--show archived list button for all users-->
+        <a asp-controller="Home" asp-action="ListArchive" class="btn archive-btn">Archived <ion-icon name="archive" class="archive-btn-icon ms-1"></ion-icon></a>
+    </div>
+
+    <br />
+
+    <!--paging nav bar-->
+    @{
+        var prevDisabled = !Model.HasPreviousPage ? "disabled='disabled'" : "";
+        var nextDisabled = !Model.HasNextPage ? "disabled='disabled'" : "";
+    }
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center pagination-sm" style="margin:20px 0">
+            <li class="page-item">
+                <button type="submit" name="page" value="1" @prevDisabled class="btn page-link">
+                    <span aria-hidden="true">&lArr;</span>&nbsp;First
+                </button>
+            </li>
+            <li class="page-item">
+                <button type="submit" name="page" @prevDisabled value="@(Model.PageNumber - 1)" class="btn page-link">
+                    <span aria-hidden="true">&larr;</span>&nbsp;Previous
+                </button>
+            </li>
+            <li class="page-item active">
+                <button type="button" disabled="disabled" class="btn page-link">
+                    Page @Model.PageNumber of @Model.PageCount
+                </button>
+            </li>
+            <li class="page-item">
+                <button type="submit" name="page" @nextDisabled value="@(Model.PageNumber + 1)" class="btn page-link">
+                    Next&nbsp;<span aria-hidden="true">&rarr;</span>
+                </button>
+            </li>
+            <li class="page-item">
+                <button type="submit" name="page" @nextDisabled value="@Model.PageCount" class="btn page-link">
+                    Last&nbsp;<span aria-hidden="true">&rArr;</span>
+                </button>
+            </li>
+        </ul>
+    </nav>
+</form>
+
+@section scripts {
+    <!--if navigated here from the dashboard button viewing ncr reports for this year, display alert-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let date = new Date().getFullYear();
+            // Check if the showAlert flag is set, and if so, show the alert
+            if (sessionStorage.getItem('showAlert') === 'true') {
+                alert('Showing all NCR reports from ' + date);
+                sessionStorage.removeItem('showAlert'); // Clear the flag
+            }
+            else if (sessionStorage.getItem('showAlertClosed') === 'true') {
+                alert('Showing closed NCR reports from ' + date);
+                sessionStorage.removeItem('showAlertClosed'); // Clear the flag
+            }
+        });
+    </script>
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Bootstrap's JavaScript (ensure you're including Bootstrap's JS or Bundle) -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap-Select's JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
+    <!--searchable drop down list-->
+    <script type="text/javascript">
+        $(function () {
+            $("#ddlSupplier").selectpicker({ width: "100%" });
+        });
+    </script>
+    <!--status bar in stage column-->
+    <script>
+        $(document).ready(function () {
+
+            //select all elements with the class "stage"
+            $('.stage').each(function () {
+
+                //hold the text value of each "stage" element in a variable
+                var stage = $(this).text().trim();
+
+                //depenging on the text, add different css class
+                switch (stage) {
+                    case "Engineering":
+                        $(this).addClass('stage-eng2');
+                        break;
+                    case "Operations":
+                        $(this).addClass('stage-oper3');
+                        break;
+                    case "Procurement":
+                        $(this).addClass('stage-procure4');
+                        break;
+                    case "Quality Rep":
+                        $(this).addClass('stage-qual5');
+                        break;
+                    case "Complete":
+                        $(this).addClass('stage-complete');
+                        break;
+                    default: //default to just the stage class
+                        $(this).addClass('stage');
+                }
+            });
+        });
+    </script>
+    <!--initialize toast messages (hide or display)-->
+    <script>
+        $(document).ready(function () {
+            $('#toastCreate').toast('show');
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#toastEdit').toast('show')
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#toastEditCheck').toast('show')
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#toastUnvoid').toast('show')
+        });
+    </script>
+}

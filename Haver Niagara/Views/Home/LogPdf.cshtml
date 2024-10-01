@@ -1,0 +1,58 @@
+﻿@model IEnumerable<Haver_Niagara.Models.NCR>
+
+@{
+    ViewData["Title"] = "NCRs";
+}
+
+@{
+    Layout = null;
+}
+
+@* PRINT TO PDF DOCUMENT *@
+
+<h1 class="container mt-4">Non-Conformance Log</h1>
+
+<table class="table container">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.NCR_Date)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FormattedID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Part.PartNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Supplier)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.NCR_Stage)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.NCR_Date)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FormattedID)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Part.SAPNumber)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Supplier.Name)
+                </td>
+
+                <td>
+                    @Html.DisplayFor(modelItem => item.NCR_Stage)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

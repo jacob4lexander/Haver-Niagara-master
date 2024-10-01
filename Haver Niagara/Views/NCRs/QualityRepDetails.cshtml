@@ -1,0 +1,316 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+
+@model Haver_Niagara.Models.NCR
+
+@{
+    ViewData["Title"] = $"{@Model.FormattedID} - Quality View";
+}
+
+<link rel="stylesheet" type="text/css" href="@Url.Content("~/css/ncrForm.css")" />
+
+<div class="d-flex justify-content-end">
+    <a id="cancel-button" asp-controller="Home" asp-action="List" class="btn btn-close"></a>
+</div>
+<!--Header-->
+<div>
+    <div class="pt-2 pb-0 ps-1 fs-5 d-flex justify-content-between form-labels">
+        <dl class="d-flex ">
+            <dt>
+                @Html.DisplayNameFor(model => model.FormattedID)
+            </dt>
+            <dd class="ms-2">
+                @Html.DisplayFor(model => model.FormattedID)
+                @{
+                    var test = Model;
+                }
+            </dd>
+        </dl>
+        <dl class="d-flex justify-content-between">
+            <dt>
+                Date Created:
+                @* @Html.DisplayNameFor(model => model.NCR_Date) *@
+            </dt>
+            <dd class="ms-2">
+                @Html.DisplayFor(model => model.NCR_Date)
+            </dd>
+        </dl>
+    </div>
+    <div class="d-flex justify-content-between text-muted mb-3 small-stage-labels">
+        <!--hidden button, not functional - just for styling-->
+        <button class="btn-forward pe-none">
+            <ion-icon name="arrow-forward-circle-outline" class="btn-forward-icon bg-white "></ion-icon>
+        </button>
+        <!--display enum stage quality rep-->
+        <div>
+            @foreach (var ncrStage in Enum.GetValues(typeof(NCRStage)))
+            {
+                <div class="form-check form-check-inline">
+                    <input type="radio" asp-for="NCR_Stage" disabled class="form-check-input" value="@ncrStage" id="@($"ncrStage{ncrStage}")" />
+                    <label for="@($"ncrStage{ncrStage}")">@((typeof(NCRStage).GetMember(ncrStage.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label>
+                </div>
+            }
+        </div>
+        <!--Next Section = OperationDetails-->
+        <a asp-action="EngineerDetails" asp-route-id="@Model?.ID" class="btn-forward">
+            <ion-icon name="arrow-forward-circle-outline" class="btn-forward-icon"></ion-icon>
+        </a>
+@*         <button onclick="window.history.back();" class="btn-forward">
+            <ion-icon name="arrow-forward-circle-outline" class="btn-forward-icon"></ion-icon>
+        </button> *@
+    </div>
+</div>
+
+<form>
+    <div>
+        @* Quality Inspector Section *@
+        <div class="row border m-1 p-2 ps-3 fs-6 section-header bg-secondary">1. Quality Representative</div>
+        @* row 1  *@
+        <div class="row m-1">
+            <div class="col-sm-4 border pt-3 ps-3">
+                <dl>
+                    <dt>
+                        Identify Process Applicable:
+                    </dt>
+                    <dd class="mt-1 ms-2">
+                        @foreach (var qualityIdentify in Enum.GetValues(typeof(QualityIdentify))) //working!
+                        {
+                            <div class="form-check form-check-inline">
+                                <input type="radio" asp-for="QualityInspection.QualityIdentify" disabled class="form-check-input" value="@qualityIdentify" id="@($"qualityIdentify{qualityIdentify}")" />
+                                @* <label class="form-check-label" for="@($"qualityIdentify{qualityIdentify}")">@qualityIdentify</label> *@
+                                <label class="" for="@($"qualityIdentify{qualityIdentify}")">@((typeof(QualityIdentify).GetMember(qualityIdentify.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label>
+                            </div>
+                        }
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-sm-4 border pt-3 ps-3">
+                <dl>
+                    <dt class="">
+                        Supplier Name
+                    </dt>
+                    <dd class="mt-1">
+                        @Html.DisplayFor(model => model.Supplier.Name)
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-sm-4 border pt-3 ps-3">
+                <div class="row">
+                    <dl class="d-flex m-0">
+                        <dt class="col-sm-5 ">
+                            @Html.DisplayNameFor(model => model.FormattedID)
+                        </dt>
+                        <dd class="col-sm-7 ms-2">
+                            @Html.DisplayFor(model => model.FormattedID)
+                        </dd>
+                    </dl>
+                </div>
+                <div class="row">
+                    <dl class="d-flex m-0">
+                        <dt class="col-sm-5 ">
+                            PO or Prod No.
+                        </dt>
+                        <dd class="col-sm-7 ms-2">
+                            @Html.DisplayFor(model => model.Part.ProductNumber)
+                        </dd>
+                    </dl>
+                </div>
+                <div class="row">
+                    <dl class="d-flex mb-1">
+                        <dt class="col-sm-5 ">
+                            @Html.DisplayNameFor(model => model.Part.SalesOrder)
+                        </dt>
+                        <dd class="col-sm-7 ms-2">
+                            @Html.DisplayFor(model => model.Part.SalesOrder)
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        @* row 2 *@
+        <div class="row m-1">
+            <div class="col-sm-8 border pt-3 ps-3">
+                <dl>
+                    <dt>
+                        Description of Item <span class="fw-light">(including SAP No.)</span>
+                    </dt>
+                    <dd class="mt-1">
+                        <div class="d-flex">
+                            @* @Html.DisplayFor(model => model.Part.SAPNumber) - @Html.DisplayFor(model => model.Part.Name) *@
+                        </div>
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-sm-4 border pt-3 ps-3">
+                <div class="row">
+                    <dl class="d-flex m-0">
+                        <dt class="col-sm">
+                            @Html.DisplayNameFor(model => model.Part.QuantityRecieved)
+                        </dt>
+                        <dd class="col-sm ms-2">
+                            @Html.DisplayFor(model => model.Part.QuantityRecieved)
+                        </dd>
+                    </dl>
+                </div>
+                <div class="row">
+                    <dl class="d-flex">
+                        <dt class="col-sm">
+                            @Html.DisplayNameFor(model => model.Part.QuantityDefect)
+                        </dt>
+                        <dd class="col-sm ms-2">
+                            @Html.DisplayFor(model => model.Part.QuantityDefect)
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        @* row 3 *@
+        <div class="row m-1">
+            <div class="col-sm-12 border pt-3 ps-3">
+                <dl>
+                    <dt>
+                        Description of Defect <span class="fw-light">(in as much detail as possible)</span>
+                        @* @Html.DisplayNameFor(model => model.Product.DefectLists) *@
+                    </dt>
+                    <dd class="mt-1">
+                        <div class="d-flex">
+                            @* @Html.DisplayFor(model => model.Product.DefectLists) *@
+                            @if (Model.Part != null && Model.Part.DefectLists != null)
+                            {
+                                @foreach (var defectL in Model.Part.DefectLists)
+                                {
+                                    @defectL.Defect.Name
+                                    ;
+                                }
+                            }
+                        </div>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        @* row 4 *@
+        <div class="row m-1 border">
+            <div class="col-sm-3 pt-3 ps-3 d-flex justify-content-start">
+                <dl>
+                    <dt>
+                        Item marked Non-conforming
+                    </dt>
+                    <dd class="mt-2">
+                        <div class="d-flex">
+                            @Html.RadioButtonFor(model => model.QualityInspection.ItemMarked, true, new { @checked = Model.QualityInspection != null && Model.QualityInspection.ItemMarked, @disabled = "disabled", @class = "me-2" })
+                            <label class="me-4">Yes</label>
+
+                            @Html.RadioButtonFor(model => model.QualityInspection.ItemMarked, false, new { @checked = Model.QualityInspection != null && !Model.QualityInspection.ItemMarked, @disabled = "disabled", @class = "me-2" })
+                            <label>No</label>
+                        </div>
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-sm-3 pt-2">
+                <small class="fw-light">
+                    Completed NCR to be forwarded to HBC Purchasing Manager complete with any relevant documents attached
+                </small>
+            </div>
+            <div class="col-sm-6 border pt-3 ps-3">
+                <div class="row">
+                    <dl class="d-flex m-0">
+                        <dt class="col-sm">
+                            Quality Representative's Name
+                            @* @Html.DisplayNameFor(model => model.QualSignature) *@
+                        </dt>
+                        <dd class="col-sm ms-2">
+                            @Html.DisplayFor(model => model.QualityInspection.Name) @* Where do we get quality reps name without going through new ncr? *@
+                        </dd>
+                    </dl>
+                </div>
+                <div class="row">
+                    <dl class="d-flex">
+                        <dt class="col-sm">
+                            Date
+                            @* @Html.DisplayNameFor(model => model.QualDate) *@
+                        </dt>
+                        <dd class="col-sm ms-2">
+                            @Html.DisplayFor(model => model.NCR_Date)           @* FIX THIS PART TOO *@
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        @* row 5 *@
+        <div class="row m-1 border">
+            <dl>
+                <dt class="col-sm pt-3 ps-3">
+                    @* Hard-coded value *@
+                    Images
+                </dt>
+                <dd class="col-sm pt-3 ps-3">
+                    @if (Model.Part != null && Model.Part.Medias != null && Model.Part.Medias.Any())
+                    {
+                        foreach (var image in Model.Part.Medias)
+                        {
+                            if (image.Content != null)
+                            {
+                                <img src="data:@image.MimeType;base64,@Convert.ToBase64String(image.Content)" alt="@image.Description" width="300" height="300" />
+
+                            }
+                            else
+                            {
+                                //Content Failed error ?
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <text>No Images Associated</text>
+                    }
+                </dd>
+            </dl>
+        </div>
+        @* row 6 *@
+        <div class="row m-1">
+            <div class="col-sm-12 border pt-3 ps-3">
+                <dl>
+                    <dt class="ps-3">
+                        Links
+                    </dt>
+                    @if (Model.Part == null)
+                    {
+                        <dd class="mt-1 ps-3">
+                            No Part Associated
+                        </dd>
+                    }
+                    else if (Model.Part.Medias != null && Model.Part.Medias.Any())
+                    {
+                        @foreach (var media in Model.Part.Medias)
+                        {
+                            if (!string.IsNullOrEmpty(media.Links))
+                            {
+                                <dd class="mt-1 ps-3">
+                                    <a href="@media.Links">@media.Links</a>
+                                </dd>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <dd class="mt-1 ps-3">
+                            No Links Associated
+                        </dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+        @if (User.IsInRole("Quality Representative"))
+        {
+            <div class="mt-2">
+                <a asp-action="QualityRepEditFirst" asp-route-id="@Model?.ID" class="btn btn-outline-primary me-3">Edit Section</a>
+            </div>
+        }
+        <div class="mt-2">
+            <a id="cancel-button" asp-controller="Home" asp-action="List" class="btn btn-outline-danger">Cancel</a>
+        </div>
+    </div>
+</form>

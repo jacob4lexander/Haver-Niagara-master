@@ -1,0 +1,576 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+
+@model Haver_Niagara.Models.NCR
+
+@{
+	Layout = "~/Views/Shared/_LayoutPdf.cshtml";
+	ViewData["Title"] = @Model.FormattedID;
+}
+
+<!--Import Tailwind CSS Library-->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<link rel="stylesheet" type="text/css" href="@Url.Content("wwwroot/css/pdfStyle.css")" />
+
+<div class="parent page-break">
+
+	<div class="div1">
+		<h1>Haver & Boecker Niagara</h1>
+	</div>
+
+	<div class="div2">
+		<h1>Internal Process Document</h1>
+	</div>
+
+	<div class="div3">
+		<img src="@Url.Content("wwwroot/images/report-logo.png")" alt="Logo" class="logo" />
+	</div>
+
+	<div class="div4">
+		<small>Document No.:</small><br>
+	</div>
+	<div class="div4 flex justify-center">
+		<h2></h2>
+	</div>
+
+	<div class="div5">
+		<small>Document Title:</small><br>
+	</div>
+	<div class="div5 flex justify-center">
+		<h2>Non-Conforming Report</h2>
+	</div>
+
+	<div class="div6">
+		<small>Page:</small><br>
+	</div>
+	<div class="div6 flex justify-center">
+		<h2>1 of 2</h2>
+	</div>
+
+	<div class="div7">1/ Quality Representative</div>
+
+	<div class="div8"><h2>Identify Process Applicable:</h2></div>
+	<div class="div9">
+		@foreach (var qualityIdentify in Enum.GetValues(typeof(QualityIdentify))) //working!
+		{
+			<div class="form-check form-check-inline">
+				<input type="radio" asp-for="QualityInspection.QualityIdentify" disabled class="form-check-input" value="@qualityIdentify" id="@($"qualityIdentify{qualityIdentify}")" />
+				@* <label class="form-check-label" for="@($"qualityIdentify{qualityIdentify}")">@qualityIdentify</label> *@
+				<label class="" for="@($"qualityIdentify{qualityIdentify}")">@((typeof(QualityIdentify).GetMember(qualityIdentify.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label>
+			</div>
+		}
+	</div>
+
+	<div class="div10"><h2>Supplier Name:</h2></div>
+	<div class="div11">
+		@Html.DisplayFor(model => model.Supplier.Name)
+	</div>
+
+	<div class="div12"><h2>NCR No.:</h2></div>
+	<div class="div13">
+		@Html.DisplayFor(model => model.FormattedID)
+	</div>
+
+	<div class="div14"><span class="title">PO or Prod No.:</span></div>
+	<div class="div15">
+		@Html.DisplayFor(model => model.Part.ProductNumber)
+	</div>
+
+	<div class="div16"><h2>Sales Order No.:</h2></div>
+	<div class="div17">
+		@Html.DisplayFor(model => model.Part.SalesOrder)
+	</div>
+
+	<div class="div18">
+		<span class="title">Description of Item (including SAP No.):</span><br>
+		@* <span class="value">@Html.DisplayFor(model => model.Part.SAPNumber) - @Html.DisplayFor(model => model.Part.Name)</span> *@
+	</div>
+
+	<div class="div19">
+		<span class="title">Quantity Received: </span>
+		<span class="value">@Html.DisplayFor(model => model.Part.QuantityRecieved)</span>
+	</div>
+
+	<div class="div20">
+		<span class="title">Quantity Defective: </span>
+		<span class="value">@Html.DisplayFor(model => model.Part.QuantityDefect)</span>
+	</div>
+
+	<div class="div21">
+		<span class="title">Description of Defect:</span> (in as much detail as possible, use page 2 if necessary)<br>
+		@if (Model.Part != null && Model.Part.DefectLists != null)
+		{
+			@foreach (var defectL in Model.Part.DefectLists)
+			{
+				@defectL.Defect.Name
+				;
+			}
+		}
+	</div>
+
+	<div class="div22">
+		<h2>Item marked Nonconforming</h2><br>
+		@Html.RadioButtonFor(model => model.QualityInspection.ItemMarked, true, new { @checked = Model.QualityInspection != null && Model.QualityInspection.ItemMarked, @disabled = "disabled", @class = "me-2" })
+		<label class="me-4">Yes</label>
+
+		@Html.RadioButtonFor(model => model.QualityInspection.ItemMarked, false, new { @checked = Model.QualityInspection != null && !Model.QualityInspection.ItemMarked, @disabled = "disabled", @class = "me-2" })
+		<label>No</label>
+	</div>
+
+	<div class="div23">
+		<small>
+			Completed NCR to be forwarded to HBC Purchasing Manager
+			complete with any relevant documents attached (pictures, actual
+			measurements, material certs, etc.)
+		</small>
+	</div>
+
+	<div class="div24">
+		<span class="title">Quality Representative's Name: </span>
+		<span class="value">@Html.DisplayFor(model => model.QualityInspection.Name)</span>
+
+		<span class="title insert-space-left">Date:</span>
+		<span class="value">@Html.DisplayFor(model => model.NCR_Date)</span>
+	</div>
+
+	<div class="div25">
+		<span class="title">Review by HBC Engineering</span> (indicate disposition by "checking" one of the following)<br>
+		<span class="value">
+			@foreach (EngineeringDisposition disposition in Enum.GetValues(typeof(EngineeringDisposition)))
+			{
+				<label class="mr-5">
+					<input type="radio" id="@disposition" name="disposition" disabled value="@disposition"
+					@(Model.Engineering?.EngineeringDisposition == disposition ? "checked" : "") />
+					@((typeof(EngineeringDisposition).GetMember(disposition.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)
+				</label>
+			}
+		</span>
+	</div>
+
+	<div class="div26">
+		<span class="title">Does Customer require notification of NCR</span> (If "Yes" then raise message to customer detailing issues)<br>
+		<span class="value">
+			@Html.RadioButtonFor(model => model.Engineering.CustomerNotify, true, new { @checked = Model.Engineering != null && Model.Engineering.CustomerNotify, @disabled = "disabled", @class = "me-2" })
+			<label class="me-4">Yes</label>
+
+			@Html.RadioButtonFor(model => model.Engineering.CustomerNotify, false, new { @checked = Model.Engineering != null && !Model.Engineering.CustomerNotify, @disabled = "disabled", @class = "me-2" })
+			<label>No</label>
+		</span>
+	</div>
+
+	<div class="div27">
+		<span class="title">Disposition</span> (Sequence of work steps required when "repair" or "rework" indicated)<br>
+		<span class="value">
+			@Html.DisplayFor(model => model.Engineering.DispositionNotes)
+		</span>
+	</div>
+
+	<div class="div28">
+		<span class="title">Does the drawing require updating?</span>
+		<span class="value insert-space-left">
+			@Html.RadioButtonFor(model => model.Engineering.DrawUpdate, true, new { @checked = Model.Engineering != null && Model.Engineering.DrawUpdate, @disabled = "disabled", @class = "me-2" })
+			<label class="me-4">Yes</label>
+
+			@Html.RadioButtonFor(model => model.Engineering.DrawUpdate, false, new { @checked = Model.Engineering != null && !Model.Engineering.DrawUpdate, @disabled = "disabled", @class = "me-2" })
+			<label>No</label>
+		</span>
+	</div>
+
+	<div class="div29">
+		<span class="title">Original Rev. Number:</span> @Html.DisplayFor(model => model.Engineering.RevisionOriginal)<br>
+		<span class="title">Name of Engineer:</span> @Html.DisplayFor(model => Model.Engineering.Name)
+	</div>
+
+	<div class="div30">
+		<span class="title">Updated Rev. Number:</span> @Html.DisplayFor(model => model.Engineering.RevisionUpdated)<br>
+
+		<span class="title">Revision Date:</span>
+		<span class="value">
+			@if (Model.Engineering != null)
+			{
+				var EngineeringRevisionDate = Model.Engineering.RevisionDate;
+
+				@EngineeringRevisionDate.ToString("yyyy-MM-dd")
+			}
+			else
+			{
+				<span>No engineering date associated.</span>
+			}
+		</span><br>
+
+		<span class="title">Engineering:</span>
+		<span class="value">@Html.DisplayFor(model => model.Engineering.Name)</span> @* Is this the correct name? *@
+		<span class="title insert-space-left">Date:</span>
+		<span class="value">@Html.DisplayFor(model => model.Engineering.Date)</span>
+	</div>
+
+	<div class="div31">2/ Engineering</div>
+
+	<div class="div32">
+		<span class="title">Operation's Preliminary Decision:</span>
+		@if (Model != null && Model.Operation != null)
+		{
+			<div class="mt-1 ms-2">
+				@foreach (OperationDecision identify in Enum.GetValues(typeof(OperationDecision)))
+				{
+					<div class="inline-block">
+						<input type="radio" id="@identify" name="qualityIdentify" value="@identify" disabled
+						@(Model.Operation != null && Model.Operation.OperationDecision == identify ? "checked" : "") />
+						<label for="@identify">
+							@((typeof(OperationDecision).GetMember(identify.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)
+						</label>
+					</div>
+				}
+			</div>
+		}
+		<br>
+		@Html.DisplayFor(model => model.Operation.OperationNotes)
+	</div>
+
+	<div class="div33">
+		<span class="title">Was a CAR raised?</span> (if "Yes" indicate CAR #)
+		<span class="value insert-space-left">
+			@Html.RadioButtonFor(model => model.Operation.OperationCar, true, new { @checked = Model.Operation != null && Model.Operation.OperationCar, @disabled = "disabled", @class = "me-2" })
+			<label class="me-4">Yes</label>
+
+			@Html.RadioButtonFor(model => model.Operation.OperationCar, false, new { @checked = Model.Operation != null && !Model.Operation.OperationCar, @disabled = "disabled", @class = "me-2" })
+			<label>No</label>
+		</span>
+	</div>
+
+	<div class="div34">
+		<span class="title">Follow-up Required?</span> (if "Yes" indicate type & expected date)
+		<span class="value insert-space-left">
+			@Html.RadioButtonFor(model => model.Operation.OperationFollowUp, true, new { @checked = Model.Operation != null && Model.Operation.OperationFollowUp, @disabled = "disabled", @class = "me-2" })
+			<label class="me-4">Yes</label>
+			@Html.RadioButtonFor(model => model.Operation.OperationFollowUp, false, new { @checked = Model.Operation != null && !Model.Operation.OperationFollowUp, @disabled = "disabled", @class = "me-2" })
+			<label>No</label>
+		</span>
+	</div>
+
+	<div class="div35">
+		<span class="title">Operations Manager:</span> @Html.DisplayFor(model => model.Operation.Name)
+		<span class="title insert-space-left">Date:</span>
+		@{
+			var OperationDate = Model.Operation != null ? Model.Operation.OperationDate.ToString("yyyy-MM-dd") : "Date Not Specified";
+		}
+		@OperationDate
+	</div>
+
+	<div class="div36">3/ Operations</div>
+
+	@* 	Procurement Section
+	*@
+
+	<div class="div37">
+		<span class="title">Return rejected items to supplier</span> (if "Yes" enter carrier information)<br>
+		@Html.RadioButtonFor(model => model.Procurement.ReturnRejected, true, new { @checked = Model.Procurement != null && Model.Procurement.ReturnRejected, @disabled = "disabled", @class = "me-2" })
+		<label class="me-4">Yes</label>
+
+		@Html.RadioButtonFor(model => model.Procurement.ReturnRejected, false, new { @checked = Model.Procurement != null && !Model.Procurement.ReturnRejected, @disabled = "disabled", @class = "me-2" })
+		<label>No</label>
+	</div>
+
+	<div class="div38">
+		<span class="title">When will replacement/reworked be received/returned?</span>
+		<span class="title">Date:</span> @Html.DisplayFor(model => model.Procurement.ToReceiveDate)
+	</div>
+
+	<div class="div39">
+		<span class="title">RMA Number:</span>
+		<span class="value"> @Html.DisplayFor(model => model.Procurement.RMANumber)</span><br>
+
+		<span class="title">Carrier:</span>
+		<span class="value"> @Html.DisplayFor(model => model.Procurement.CarrierName)</span><br>
+
+
+		<span class="title">Phone:</span>
+		<span class="value"> @Html.DisplayFor(model => model.Procurement.CarrierPhone)</span><br>
+
+		<span class="title">Account Number:</span>
+		<span class="value"> @Html.DisplayFor(model => model.Procurement.AccountNumber)</span>
+	</div>
+
+	<div class="div40">
+		<span class="value">Dispose on site</span><br>
+		@Html.RadioButtonFor(model => model.Procurement.DisposeOnSite, true, new { @checked = Model.Procurement != null && Model.Procurement.DisposeOnSite == true, @disabled = "disabled", @class = "me-2" })
+		<label class="me-4">Yes</label>
+
+		@Html.RadioButtonFor(model => model.Procurement.DisposeOnSite, false, new { @checked = Model.Procurement != null && !Model.Procurement.DisposeOnSite == false, @disabled = "disabled", @class = "me-2" })
+		<label>No</label>
+	</div>
+
+	<div class="div41">
+		<span class="value">
+			@Html.CheckBoxFor(model => model.Procurement.SuppReturnCompletedSAP, new { @disabled = "disabled" })
+			<label>Supplier return has been completed in SAP</label><br>
+
+			@Html.CheckBoxFor(model => model.Procurement.ExpectSuppCredit, new { @disabled = "disabled" })
+			<label>Expecting credit from supplier</label><br>
+
+			@Html.CheckBoxFor(model => model.Procurement.BillSupplier, new { @disabled = "disabled" })
+			<label>Billing supplier for expenses incurred in the rework process</label>
+		</span>
+	</div>
+
+	<div class="div42">4/ Procurement</div>
+
+	@* 	Quality Rep pt.2
+	*@
+	<div class="div43">
+		<span class="title">Re-Inspected Acceptable?</span> (if "No" then record new NCR number)
+		<span class="value insert-space-left">
+			@Html.RadioButtonFor(model => model.QualityInspectionFinal.ReInspected, true, new { @checked = Model.QualityInspectionFinal != null && Model.QualityInspectionFinal.ReInspected, @disabled = "disabled", @class = "me-2" })
+			<label class="me-4">Yes</label>@Html.RadioButtonFor(model => model.QualityInspectionFinal.ReInspected, false, new { @checked = Model.QualityInspectionFinal != null && !Model.QualityInspectionFinal.ReInspected, @disabled = "disabled", @class = "me-2" })
+			<label>No</label>
+		</span>
+	</div>
+
+	<div class="div44">
+		New NCR Number:
+		<div>
+			@{
+				// If the Old or New NCRID's are not null then..
+				if (Model.OldNCRID != null || ViewBag.NewNCRID != null)
+				{
+					// Declare formatID to use for comparison
+					var newNCR = ViewBag?.NewNCRID;
+					var oldNCR = Model?.OldNCRID;
+
+					// Format NCR IDs with the current year
+					string newNCR_ID = newNCR != null ? $"{DateTime.UtcNow.Year}-{newNCR.ToString().PadLeft(3, '0')}" : null;
+					string oldNCR_ID = oldNCR != null ? $"{DateTime.UtcNow.Year}-{oldNCR.ToString().PadLeft(3, '0')}" : null;
+
+					// If the formatted ID is NOT the same as the old one OR if the formatted id is NOT equal to the ViewBag format ID, proceed
+					if (Model.FormattedID != oldNCR_ID || Model.FormattedID != newNCR_ID)
+					{
+						// If the old NCR id is not null, then it must be Previous, else it must be New
+						string ncrLabel = oldNCR != null ? "Previous NCR Number" : "New NCR Number";
+						@ncrLabel
+					}
+				}
+
+			}
+		</div>
+		@{
+			if (Model.OldNCRID != null || ViewBag.NewNCRID != null)
+			{
+				// Declare formatID to use for comparison
+				var newNCR = ViewBag?.NewNCRID;
+				var oldNCR = Model?.OldNCRID;
+
+				// Format NCR IDs with the current year
+				string newNCR_ID = newNCR != null ? $"{DateTime.UtcNow.Year}-{newNCR.ToString().PadLeft(3, '0')}" : null;
+				string oldNCR_ID = oldNCR != null ? $"{DateTime.UtcNow.Year}-{oldNCR.ToString().PadLeft(3, '0')}" : null;
+
+				if (oldNCR_ID != Model.FormattedID || newNCR_ID != Model.FormattedID)
+				{
+					// If old NCR ID is null then use new NCR ID
+					string useID = oldNCR_ID != null ? oldNCR_ID : newNCR_ID;
+					@useID
+				}
+			}
+		}
+	</div>
+
+	<div class="div45">
+		<span class="title">Inspector's Name:</span>
+		<span class="value">@Html.DisplayFor(model => model.QualityInspectionFinal.InspectorName)</span>
+		<span class="title insert-space-left">Date:</span>
+		<span class="value">@Html.DisplayFor(model => model.QualityInspectionFinal.InspectorDate)</span>
+	</div>
+
+	<div class="div46">
+		<span class="title insert-space-right">NCR Still Active?</span>
+		@Html.RadioButtonFor(model => model.NCR_Status, true, new { @checked = Model != null && Model.NCR_Status, @disabled = "disabled", @class = "me-2" })
+		<label class="me-4">Yes</label>
+	</div>
+
+	<div class="div47">
+		<span class="title">Quality Department:</span>
+		<span class="value"> @Html.DisplayFor(model => model.QualityInspectionFinal.Department)</span>
+
+		<span class="title insert-space-left">Date:</span>
+		<span class="value"> @Html.DisplayFor(model => model.QualityInspectionFinal.DepartmentDate)</span>
+	</div>
+
+	<div class="div48">5/ Quality Rep.</div>
+
+	<div class="div49"><small>Document Author:<br></small></div>
+
+	<div class="div50"><small>Document Date:<br>@Html.DisplayFor(model => model.NCR_Date)</small></div>
+
+	<div class="div51"><small>Approved By:<br></small></div>
+
+	<div class="div52">
+		<small>
+			Revision Date:<br>
+			@Html.DisplayFor(model => model.Engineering.RevisionDate)
+		</small>
+	</div>
+
+	<div class="div53">
+		<small>
+			Revision No.:<br> @* ASK CLIENT ABOUT THIS: is revision # at the bottom of the document the updated one if there is one? *@
+			@{
+				if (Model.Engineering.RevisionUpdated == null)
+				{
+					@Html.DisplayFor(model => model.Engineering.RevisionOriginal)
+				}
+				else
+				{
+					@Html.DisplayFor(model => model.Engineering.RevisionUpdated)
+				}
+			}
+		</small>
+	</div>
+
+</div>
+
+
+
+<div class="parent2">
+
+	<div class="div1">
+		<h1>Haver & Boecker Niagara</h1>
+	</div>
+
+	<div class="div2">
+		<h1>Internal Process Document</h1>
+	</div>
+
+	<div class="div3">
+		<img src="@Url.Content("wwwroot/images/report-logo.png")" alt="Logo" class="logo" />
+	</div>
+
+	<div class="div4"><small>Document No.:</small><br><h2></h2></div>
+	<div class="div5"><small>Document Title:</small><br><h2>Non-Conforming Report</h2></div>
+	<div class="div6"><small>Page:</small><br><h2>2 of 2</h2></div>
+
+	<div class="div54"><small>When required utilize the space below for any additional information including drawings, sketches, pictures, etc.</small></div>
+
+	<div class="div12"><h2>NCR No.:</h2></div>
+	<div class="div13">
+		@Html.DisplayFor(model => model.FormattedID)
+	</div>
+
+	<div class="div55">Quality Representative</div>
+
+	<div class="div56">
+		@if (Model.Part != null && Model.Part.Medias != null && Model.Part.Medias.Any())
+		{
+			foreach (var image in Model.Part.Medias)
+			{
+				if (image.Content != null)
+				{
+					<img src="data:@image.MimeType;base64,@Convert.ToBase64String(image.Content)" alt="@image.Description" width="300" height="300" />
+
+				}
+				else
+				{
+					//Content Failed error ?
+				}
+			}
+		}
+		else
+		{
+			<text>No Images Associated</text>
+		}
+	</div>
+
+	<div class="div57">Insp</div>
+
+	<div class="div43">
+		<span class="title">Re-Inspected Acceptable?</span>(if "No" then record new NCR number)
+		@Html.RadioButtonFor(model => model.QualityInspectionFinal.ReInspected, true, new { @checked = Model.QualityInspectionFinal != null && Model.QualityInspectionFinal.ReInspected, @disabled = "disabled", @class = "me-2" })
+		<label class="me-4">Yes</label>
+
+		@Html.RadioButtonFor(model => model.QualityInspectionFinal.ReInspected, false, new { @checked = Model.QualityInspectionFinal != null && !Model.QualityInspectionFinal.ReInspected, @disabled = "disabled", @class = "me-2" })
+		<label>No</label>
+	</div>
+
+	<div class="div44">
+		New NCR Number:
+		<div>
+			@{
+				// If the Old or New NCRID's are not null then..
+				if (Model.OldNCRID != null || ViewBag.NewNCRID != null)
+				{
+					// Declare formatID to use for comparison
+					var newNCR = ViewBag?.NewNCRID;
+					var oldNCR = Model?.OldNCRID;
+
+					// Format NCR IDs with the current year
+					string newNCR_ID = newNCR != null ? $"{DateTime.UtcNow.Year}-{newNCR.ToString().PadLeft(3, '0')}" : null;
+					string oldNCR_ID = oldNCR != null ? $"{DateTime.UtcNow.Year}-{oldNCR.ToString().PadLeft(3, '0')}" : null;
+
+					// If the formatted ID is NOT the same as the old one OR if the formatted id is NOT equal to the ViewBag format ID, proceed
+					if (Model.FormattedID != oldNCR_ID || Model.FormattedID != newNCR_ID)
+					{
+						// If the old NCR id is not null, then it must be Previous, else it must be New
+						string ncrLabel = oldNCR != null ? "Previous NCR Number" : "New NCR Number";
+						@ncrLabel
+					}
+				}
+
+			}
+		</div>
+		@{
+			if (Model.OldNCRID != null || ViewBag.NewNCRID != null)
+			{
+				// Declare formatID to use for comparison
+				var newNCR = ViewBag?.NewNCRID;
+				var oldNCR = Model?.OldNCRID;
+
+				// Format NCR IDs with the current year
+				string newNCR_ID = newNCR != null ? $"{DateTime.UtcNow.Year}-{newNCR.ToString().PadLeft(3, '0')}" : null;
+				string oldNCR_ID = oldNCR != null ? $"{DateTime.UtcNow.Year}-{oldNCR.ToString().PadLeft(3, '0')}" : null;
+
+				if (oldNCR_ID != Model.FormattedID || newNCR_ID != Model.FormattedID)
+				{
+					// If old NCR ID is null then use new NCR ID
+					string useID = oldNCR_ID != null ? oldNCR_ID : newNCR_ID;
+					@useID
+				}
+			}
+		}
+	</div>
+
+	<div class="div45">
+		<span class="title">Inspector's Name:</span>
+		<span class="value">@Html.DisplayFor(model => model.QualityInspectionFinal.InspectorName)</span>
+		<span class="title insert-space-left">Date:</span>
+		<span class="value">@Html.DisplayFor(model => model.QualityInspectionFinal.InspectorDate)</span>
+	</div>
+
+	<div class="div49"><small>Document Author:<br></small></div>
+
+	<div class="div50"><small>Document Date:<br>@Html.DisplayFor(model => model.NCR_Date)</small></div>
+
+	<div class="div51"><small>Approved By:<br></small></div>
+
+	<div class="div52">
+		<small>
+			Revision Date:<br>
+			@Html.DisplayFor(model => model.Engineering.RevisionDate)
+		</small>
+	</div>
+
+	<div class="div53">
+		<small>
+			Revision No.:<br> @* ASK CLIENT ABOUT THIS: is revision # at the bottom of the document the updated one if there is one? *@
+			@{
+				if (Model.Engineering.RevisionUpdated == null)
+				{
+					@Html.DisplayFor(model => model.Engineering.RevisionOriginal)
+				}
+				else
+				{
+					@Html.DisplayFor(model => model.Engineering.RevisionUpdated)
+				}
+			}
+		</small>
+	</div>
+
+</div>

@@ -1,0 +1,53 @@
+﻿@model IEnumerable<Haver_Niagara.Models.NCR>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-controller="NCRs" asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.NCR_Status)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.NCR_Date)
+            </th>
+            <th>
+                Part Number
+            </th>
+            <th>
+                Supplier
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.NCR_Stage)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.NCR_Status)
+                </td>
+                <td>@Html.DisplayFor(model => item.FormattedID)</td>
+                <td>@Html.DisplayFor(modelItem => item.NCR_Date)</td>
+                <td>@(item.Part?.ProductNumber.ToString() ?? "Part Number Not Found")</td>
+                <td>@(item.Part?.Supplier.Name.ToString() ?? "Supplier Name Not Found")</td>
+                <td>@Html.DisplayFor(modelItem => item.NCR_Stage)</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

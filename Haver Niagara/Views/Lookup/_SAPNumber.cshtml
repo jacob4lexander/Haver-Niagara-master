@@ -1,0 +1,28 @@
+﻿<br />
+<div class="card mb-sm-3" style="min-width: 18rem;">
+    <h4 class="card-header" id="SAPNumber">SAP Numbers</h4>
+    <div class="card-body">
+        @Html.DropDownList("SAPNumberID", null, htmlAttributes: new { @size = 6, @class = "form-control" })
+    </div>
+    <div class="card-footer">
+        <a asp-controller="SAPNumber" asp-action="Create">Create</a> |
+        <a asp-controller="SAPNumber" asp-action="Edit" class="linkClick">Edit</a> |
+        <a asp-controller="SAPNumber" asp-action="Delete" class="linkClick">Delete</a>
+    </div>
+</div>
+
+@{
+    var editErr = TempData["ErrorMessage"] as string;
+}
+@if (!string.IsNullOrEmpty(editErr))
+{
+    <div class="toastCreate align-items-center justify-content-center" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+        <div class="toastCreate-header">
+            <strong class="me-auto">Error! SAP Number has NCR assigned</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toastCreate" aria-label="Close"></button>
+        </div>
+        <div class="toastCreate-body">
+            @Html.Raw(editErr)
+        </div>
+    </div>
+}

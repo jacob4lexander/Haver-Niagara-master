@@ -1,0 +1,360 @@
+﻿@using System.ComponentModel.DataAnnotations
+@model Haver_Niagara.Models.NCR
+
+@{
+    ViewData["Title"] = $"Editing {@Model.FormattedID} - Procurement";
+}
+
+<link rel="stylesheet" type="text/css" href="@Url.Content("~/css/ncrForm.css")" />
+
+<dl>
+    <dt class="text-muted">
+        @* Should show previous ncr number if one is linked *@
+        @{
+            var OldNCRNumber_id = ViewBag.OldNCRID != null ? $"Previous NCR No. {DateTime.UtcNow.Year}-{ViewBag.OldNCRID.ToString().PadLeft(3, '0')}" : "";
+        }
+        <span class="m2-2">
+            @OldNCRNumber_id
+        </span>
+    </dt>
+</dl>
+<div class="pt-2 pb-0 ps-1 fs-5 d-flex justify-content-between form-labels">
+    <dl class="d-flex justify-content-between">
+        <dt>
+            @Html.DisplayNameFor(model => model.FormattedID)
+        </dt>
+        <dd class="ms-2">
+            @Html.DisplayFor(model => model.FormattedID)
+        </dd>
+    </dl>
+    <div>
+
+        <dl class="d-flex justify-content-between">
+            <dt>
+                <label asp-for="NCR_Date" class="control-label"></label>
+            </dt>
+            <dd class="ms-2">
+                <input asp-for="NCR_Date" class="form-control" type="date" disabled />
+                <span asp-validation-for="NCR_Date" class="text-danger"></span>
+            </dd>
+        </dl>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <!--back to admin edit-->
+            <div class="d-flex justify-content-end">
+                <a href="@Url.Action("Edit", "NCRs", new { id = @Model.ID })" class="btn btn-close ms-3" title="Cancel" id="cancel-button"></a>
+            </div>
+        }
+
+    </div>
+</div>
+@if (!User.IsInRole("Admin"))
+{
+    <div class="d-flex justify-content-between text-muted mb-3 small-stage-labels">
+        <!--Previous Section = OperationDetails-->
+        <a asp-action="OperationsDetails" asp-route-id="@Model?.ID" class="btn-forward">
+            <ion-icon name="arrow-back-circle-outline" class="btn-forward-icon"></ion-icon>
+        </a>
+        @if (Model.NCR_Stage == NCRStage.Procurement)
+        {
+            <div>
+                @foreach (var ncrStage in Enum.GetValues(typeof(NCRStage)))
+                {
+                    <div class="form-check form-check-inline">
+                        <input type="radio" asp-for="NCR_Stage" disabled class="form-check-input" value="@ncrStage" id="@($"ncrStage{ncrStage}")" />
+                        <label for="@($"ncrStage{ncrStage}")">@((typeof(NCRStage).GetMember(ncrStage.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label>
+                    </div>
+                }
+            </div>
+        }
+        <!--back to procurement details-->
+        <a href="@Url.Action("ProcurementDetails", "NCRs", new { id = @Model.ID })" class="btn-forward" title="Close" id="cancel-button">
+            <ion-icon name="close-circle-outline" class="btn-forward-icon"></ion-icon>
+        </a>
+    </div>
+}
+
+<!--hidden button, not functional - just for styling-->
+@*    <button class="btn-forward pe-none">
+    <ion-icon name="arrow-forward-circle-outline" class="btn-forward-icon bg-white "></ion-icon>
+    </button> *@
+
+<form class="" asp-action="ProcurementEdit" id="myForm" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="ID" />
+    <div class="form-container">
+        @if (User.IsInRole("Admin") || User.IsInRole("Procurement"))
+        {
+            @* Procurement Section *@
+            <div class="section section-procure">
+                <div class="m-1 p-2 ps-3 fs-6 section-header d-flex justify-content-between">
+                    <span class="">4. Procurement (buyer)</span>
+                    <button class="border border-secondary rounded p-2 btn" id="btnFillCreate" title="Fill Form"></button>
+                </div>
+
+                @* <div class="row border m-1 p-2 ps-3 fs-6 section-header">4. Procurement (buyer)</div> *@
+
+                @* row 13 *@
+                <div class="row m-1 border">
+                    <div class="col-sm-6 pt-3 border">
+                        <div class="d-flex justify-content-center">
+                            <dl>
+                                <dt>
+                                    Return rejected items to supplier<span class="text-danger"> *</span> <span class="fw-light">(If "Yes" enter Carrier information, If "No" indicate whether to dispose on site)</span>
+                                </dt>
+                                <dd class="mt-2">
+                                    <div class="d-flex">
+                                        @Html.RadioButtonFor(model => model.Procurement.ReturnRejected, true, new { @checked = Model.Procurement != null && Model.Procurement.ReturnRejected, @class = "me-2" })
+                                        <label class="me-4">Yes</label>
+
+                                        @Html.RadioButtonFor(model => model.Procurement.ReturnRejected, false, new { @checked = Model.Procurement != null && !Model.Procurement.ReturnRejected, id="noReturn", @class = "me-2" })
+                                        <label>No</label>
+                                        <span asp-validation-for="Procurement.ReturnRejected" class="text-danger ms-3"></span>
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 pt-3 border">
+                        <div class="justify-content-center">
+                            <dl>
+                                <dt class="col-sm">
+                                    @Html.DisplayNameFor(model => model.Procurement.ToReceiveDate)
+                                </dt>
+                                <dd class="col-sm ms-2">
+                                    <input asp-for="Procurement.ToReceiveDate" type="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control" />
+                                    <span asp-validation-for="Procurement.ToReceiveDate" class="text-danger"></span>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                @* row 14 *@
+                <div class="row m-1 border">
+                    <div class="col-sm-6">
+                        <div class="col-sm-6 mt-2 mb-0 ">
+
+                            <div class="form-group">
+                                <label asp-for="Procurement.RMANumber" class="control-label"></label>
+                                <input asp-for="Procurement.RMANumber" id="RMANumber" class="form-control" />
+                                <span asp-validation-for="Procurement.RMANumber" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Procurement.CarrierName" class="control-label"></label>
+                                <input asp-for="Procurement.CarrierName" id="CarrierName" class="form-control" />
+                                <span asp-validation-for="Procurement.CarrierName" class="text-danger"></span>
+
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Procurement.CarrierPhone" class="control-label"></label>
+                                <input asp-for="Procurement.CarrierPhone" id="CarrierPhone" class="form-control" />
+                                <span asp-validation-for="Procurement.CarrierPhone" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="Procurement.AccountNumber" class="control-label"></label>
+                                <input asp-for="Procurement.AccountNumber" id="AccountNumber" class="form-control" />
+                                <span asp-validation-for="Procurement.AccountNumber" class="text-danger"></span>
+
+                            </div>
+
+                        </div>
+                        <div class="col-sm-6 mt-3 ms-5 mb-0 ">
+                            <dl>
+                                <dt>
+                                    @Html.DisplayNameFor(model => model.Procurement.DisposeOnSite)
+                                </dt>
+                                <dd class="mt-2">
+                                    <div class="d-flex">
+                                        @Html.RadioButtonFor(model => model.Procurement.DisposeOnSite, true, new { @checked = Model.Procurement != null && Model.Procurement.DisposeOnSite == true, @class = "me-2" })
+                                        <label class="me-4">Yes</label>
+
+                                        @Html.RadioButtonFor(model => model.Procurement.DisposeOnSite, false, new { @checked = Model.Procurement != null && !Model.Procurement.DisposeOnSite == false, id="noDispose", @class = "me-2" })
+                                        <label>No</label>
+                                        <span asp-validation-for="Procurement.DisposeOnSite" class="text-danger"></span>
+                                    </div>
+                                </dd>
+
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 pt-3 border">
+                        <div class="d-flex ms-1 mb-2">
+                            <span class="ms-3">
+                                @Html.CheckBoxFor(model => model.Procurement.SuppReturnCompletedSAP, new
+                                    {
+                                        id = "returnCompletedSAP"})
+                            </span>
+                            <span class="ms-3">@Html.DisplayNameFor(model => model.Procurement.SuppReturnCompletedSAP)</span>
+                        </div>
+                        <div class="d-flex ms-1 mb-2">
+                            <span class="ms-3">
+                                @Html.CheckBoxFor(model => model.Procurement.ExpectSuppCredit)
+                            </span>
+                            <span class="ms-3">@Html.DisplayNameFor(model => model.Procurement.ExpectSuppCredit)</span>
+
+                        </div>
+                        <div class="d-flex ms-1 mb-2">
+                            <span class="ms-3">
+                                @Html.CheckBoxFor(model => model.Procurement.BillSupplier)
+                            </span>
+                            <span class="ms-3">@Html.DisplayNameFor(model => model.Procurement.BillSupplier)</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        }
+    </div>
+
+    <!--action buttons-->
+    @if (Model.NCR_Stage != NCRStage.Procurement)
+    {
+        <div class="d-flex justify-content-end mt-3">
+
+            @if (!User.IsInRole("Admin"))
+            {
+                <!--cancel goes back to details view-->
+                <div class="mt-2 me-3">
+                    <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="ProcurementDetails" class="btn btn-outline-danger">Cancel</a>
+                </div>
+            }
+            else
+            {
+                <!--back to admin edit-->
+                <div class="mt-2 me-3">
+                    <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="Edit" class="btn btn-outline-danger">Cancel</a>
+                </div>
+            }
+            <span class="mt-2">
+                <input type="submit" value="Save Changes" class="btn btn-primary" />
+            </span>
+        </div>
+    }
+
+    <!--mark as completed button (should submit form if all required fields are filled and email next department)-->
+    @if (Model.NCR_Stage == NCRStage.Procurement)
+    {
+        <div class="d-flex flex-wrap justify-content-between">
+            <div class="d-flex">
+                @if (!User.IsInRole("Admin"))
+                {
+                    <div class="mt-2 me-3">
+                        <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="ProcurementDetails" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                } else
+                {
+                    <!--back to admin edit-->
+                    <div class="mt-2 me-3">
+                        <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="Edit" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                }
+                <span class="mt-2">
+                    <input type="submit" value="Save Changes" class="btn btn-outline-primary" />
+                </span>
+            </div>
+
+            <div class="d-flex">
+                <span class="mt-2 ms-2">
+                    <input type="submit" id="markCompletedBtn" value="Section Completed" title="Mark section as completed" class="btn btn-primary order-last" />
+                </span>
+            </div>
+
+        </div>
+
+    }
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <!--alert for cancel button-->
+    <script>
+        $('#cancel-button').click(function (event) {
+            // Show the confirmation dialog and store the user's response
+            var userConfirmed = confirm('Are you sure you want to cancel? All progress will be lost.');
+
+            // If the user clicks 'Cancel', prevent the default button action
+            if (!userConfirmed) {
+                event.preventDefault();
+            }
+        });
+    </script>
+    <!-- PRE-FILL DATA WHEN BUTTON CLICKED -->
+    <script>
+        document.getElementById('btnFillCreate').addEventListener('click', function (event) {
+            event.preventDefault();
+
+            document.getElementById('noReturn').checked = true; //return rejected items = no
+            document.getElementById('noDispose').checked = true; //dispose on site = no
+
+            document.getElementById('returnCompletedSAP').checked = true; //supplier return completed in SAP
+        });
+    </script>
+
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js" type="text/javascript"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Handler for the change event of the ReturnRejected radio buttons
+            $('input[name="Procurement.ReturnRejected"]').change(function () {
+                // Check if "Yes" is selected
+                if ($(this).val() === "True") {
+                    $('#RMANumber').prop('required', true);
+                    $('#RMANumber').prop('disabled', false);
+                    $('#CarrierName').prop('required', true);
+                    $('#CarrierName').prop('disabled', false);
+                    $('#CarrierPhone').prop('required', true);
+                    $('#CarrierPhone').prop('disabled', false);
+                    $('#AccountNumber').prop('required', true);
+                    $('#AccountNumber').prop('disabled', false);
+                    $('input[name="Procurement.DisposeOnSite"]').prop('checked', false);
+                    $('input[name="Procurement.DisposeOnSite"]').removeAttr('required');
+                    $('input[name="Procurement.DisposeOnSite"]').prop('disabled', true);
+                }
+                if ($(this).val() === "False") {
+                    $('#RMANumber').val('');
+                    $('#RMANumber').prop('required', false);
+                    $('#RMANumber').prop('disabled', true);
+                    $('#CarrierName').val('');
+                    $('#CarrierName').prop('required', false);
+                    $('#CarrierName').prop('disabled', true);
+                    $('#CarrierPhone').val('');
+                    $('#CarrierPhone').prop('required', false);
+                    $('#CarrierPhone').prop('disabled', true);
+                    $('#AccountNumber').val('');
+                    $('#AccountNumber').prop('required', false);
+                    $('#AccountNumber').prop('disabled', true);
+                    $('input[name="Procurement.DisposeOnSite"]').prop('disabled', false);
+                    $('input[name="Procurement.DisposeOnSite"]').prop('required', true);
+                }
+            });
+        });
+    </script>
+    <script>
+        document.getElementById('myForm').addEventListener('submit', function (event) {
+            // Get the value of the clicked submit button
+            var clickedButtonValue = event.submitter.value;
+
+            // If the clicked button is "Mark as Completed"
+            if (clickedButtonValue === 'Section Completed') {
+                // Set a hidden field value to indicate mark as completed
+                var hiddenField = document.createElement('input');
+                hiddenField.type = 'hidden';
+                hiddenField.name = 'MarkAsCompleted';
+                hiddenField.value = true;
+                this.appendChild(hiddenField);
+            }
+        });
+    </script>
+}
+
+

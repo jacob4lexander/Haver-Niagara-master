@@ -1,0 +1,77 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@* Used for cookies *@
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+<style>
+    .nav-item:hover, .form-nav-item:hover{
+    }
+    .logout-icon{
+        font-size: 20px;
+        position: relative;
+        top: 5px;
+        right: 2px;
+    }
+
+    .form-nav-item {
+        width: 100%; 
+    }
+
+        .form-nav-item button {
+            display: block; 
+            width: 100%; 
+            padding: 0.5rem 1rem; 
+        }
+
+    .dropdown-menu {
+        min-width: 220px; 
+        text-align: left;
+    }
+        .dropdown-menu li {
+            padding: 0 10px;
+        }
+
+        .dropdown-menu .nav-link {
+            white-space: nowrap; 
+            overflow: visible; 
+        }
+
+</style>
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        //Store username in cookie
+        var userName = HttpContextAccessor.HttpContext.Request.Cookies["userName"] ?? UserManager.GetUserName(User);
+        //Comment to help find this file login LOGIN Login - Menu
+        //drop down menu
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-white" href="#" id="navbarIDDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @userName <span class="d-none">- Menu</span><b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end bg-nav border-secondary text-center" aria-labelledby="navbarIDDropdown">
+                <li class="nav-item pb-1">
+                    <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Change Security Settings</a>
+                </li>
+                <li>
+                    @* <hr class="dropdown-divider text-white"> *@
+                </li>
+                <li class="nav-item border-top border-secondary pt-1 pb-1">
+                    <a class="nav-link text-white" asp-area="" asp-controller="EmployeeAccount" asp-action="Details">Manage Account</a>
+                </li>
+                <form class="form-inline form-nav-item border-top border-secondary pt-1 pe-2" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" id="logoutForm">
+                    <button type="submit" class="nav-link btn btn-link text-white" id="logoutButton"><ion-icon class="text-white logout-icon" name="exit-outline"></ion-icon> Logout </button>
+                </form>
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        </li>
+    }
+</ul>
+

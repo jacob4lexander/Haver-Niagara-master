@@ -1,0 +1,866 @@
+﻿@using System.ComponentModel.DataAnnotations
+@model Haver_Niagara.Models.NCR
+
+@{
+    ViewData["Title"] = $"Editing {@Model.FormattedID} - Quality Inspection";
+}
+
+<style>
+    .report-container {
+        padding: 10px;
+    }
+</style>
+
+<!-- Bootstrap-select -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+<link rel="stylesheet" type="text/css" href="@Url.Content("~/css/ncrForm.css")" />
+
+
+<dl>
+    <dt class="text-muted">
+        @* Should show previous ncr number if one is linked *@
+        @{
+            var OldNCRNumber_id = ViewBag.OldNCRID != null ? $"Previous NCR No. {DateTime.UtcNow.Year}-{ViewBag.OldNCRID.ToString().PadLeft(3, '0')}" : "";
+        }
+        <span class="m2-2">
+            @OldNCRNumber_id
+        </span>
+    </dt>
+</dl>
+<div class="pt-2 pb-0 ps-1 fs-5 d-flex justify-content-between form-labels">
+    <dl class="d-flex justify-content-between">
+        <dt>
+            @Html.DisplayNameFor(model => model.FormattedID)
+        </dt>
+        <dd class="ms-2">
+            @Html.DisplayFor(model => model.FormattedID)
+        </dd>
+    </dl>
+    <div class="d-flex">
+
+        <dl class="d-flex">
+            <dt>
+                <label asp-for="NCR_Date" class="control-label"></label>
+            </dt>
+            <dd class="ms-2">
+                <input asp-for="NCR_Date" class="form-control" type="date" disabled />
+                <span asp-validation-for="NCR_Date" class="text-danger"></span>
+            </dd>
+        </dl>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <!--back to admin edit-->
+            <div class="d-flex justify-content-end">
+                <a href="@Url.Action("Edit", "NCRs", new { id = @Model.ID })" class="btn btn-close ms-3" title="Cancel" id="cancel-button"></a>
+            </div>
+        }
+
+    </div>
+</div>
+@if (!User.IsInRole("Admin"))
+{
+    <div class="d-flex justify-content-between text-muted mb-3 small-stage-labels">
+        <!--hidden button, not functional - just for styling-->
+        <button class="btn-forward pe-none">
+            <ion-icon name="arrow-forward-circle-outline" class="btn-forward-icon bg-white "></ion-icon>
+        </button>
+        @if (Model.NCR_Stage == NCRStage.QualityRepresentative)
+        {
+            <div>
+                @foreach (var ncrStage in Enum.GetValues(typeof(NCRStage)))
+                {
+                    <div class="form-check form-check-inline">
+                        <input type="radio" asp-for="NCR_Stage" disabled class="form-check-input" value="@ncrStage" id="@($"ncrStage{ncrStage}")" />
+                        <label for="@($"ncrStage{ncrStage}")">@((typeof(NCRStage).GetMember(ncrStage.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label>
+                    </div>
+                }
+            </div>
+        }
+        <!--back to quality rep details-->
+        <a href="@Url.Action("QualityRepDetails", "NCRs", new { id = @Model.ID })" class="btn-forward" title="Cancel" id="cancel-button">
+            <ion-icon name="close-circle-outline" class="btn-forward-icon"></ion-icon>
+        </a>
+    </div>
+}
+@*     <button onclick="window.history.back();" class="btn-forward">
+    <ion-icon name="close-circle-outline" class="btn-forward-icon"></ion-icon>
+    </button> *@
+
+
+<partial name="_addSupplierModal" />
+<partial name="_addDefectModal" />
+<partial name="_addSAPNumberModal" />
+<partial name="_addPartNameModal" />
+<form class="" id="myForm" asp-action="QualityRepEditFirst" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="ID" />
+    <div>
+        @* Quality Inspector Section *@
+        @if (User.IsInRole("Admin") || User.IsInRole("Quality Representative"))
+        {
+            <div class="row border m-1 p-2 ps-3 fs-6 section-header">1. Quality Representative</div>
+            @* row 1 *@
+            <div class="row m-1">
+                <div class="col-sm-3 border pt-3 ps-3">
+                    <dl>
+                        <dt>
+                            Identify Process Applicable:
+                        </dt>
+                        <dd class="mt-1 ms-2">
+                            @foreach (var qualityIdentify in Enum.GetValues(typeof(QualityIdentify)))
+                            {
+                                <div class="form-check form-check-inline">
+                                    <input type="radio" asp-for="QualityInspection.QualityIdentify" class="form-check-input" value="@qualityIdentify" id="@($"qualityIdentify{qualityIdentify}")" />
+                                    <label class="" for="@($"qualityIdentify{qualityIdentify}")">@((typeof(QualityIdentify).GetMember(qualityIdentify.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label>
+                                </div>
+                            }
+                            <span asp-validation-for="QualityInspection.QualityIdentify" class="text-danger"></span>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-sm-5 border pt-3 ps-3">
+                    <dl>
+                        <dt class="">
+                            Supplier:
+                        </dt>
+                        <dd class="mt-1">
+                            <div class="form-group mt-1">
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-outline-secondary" id="nowAddSupplier" data-bs-toggle="modal" data-bs-target="#addSupplierModal" type="button">&#x2795;</button>
+                                    </div>
+                                    <select asp-for="NCRSupplierID" name="NCRSupplierID" asp-items="ViewBag.SupplierID" class="form-control selectpicker border" data-live-search="true" data-style="btn" data-dropup-auto="false">
+                                        <option value="">Select Supplier</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="NCRSupplierID" class="text-danger"></span>
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-sm-4 border pt-3 ps-3">
+                    <div class="row">
+                        <dl class="d-flex mb-2">
+                            <dt class="col-sm-5 ">
+                                <label asp-for="FormattedID" class="control-label"></label>
+                            </dt>
+                            <input asp-for="FormattedID" disabled class="form-control" />
+                            <span asp-validation-for="FormattedID" class="text-danger"></span>
+                        </dl>
+                    </div>
+                    @*   <div class="row">
+                <dl class="d-flex m-0">
+                <dt class="col-sm-5 ">
+                <label asp-for="Part.PurchaseNumber" class="control-label"></label>
+                </dt>
+                <dd class="col-sm-7 ">
+                <input asp-for="Part.PurchaseNumber" class="form-control" />
+                <span asp-validation-for="Part.PurchaseNumber" class="text-danger"></span>
+                </dd>
+                </dl>
+                </div> *@
+                    <div class="row">
+                        <dl class="d-flex m-0">
+                            <dt class="col-sm-5 ">
+                                <label asp-for="Part.ProductNumber" class="control-label"></label>
+                            </dt>
+                            <dd class="col-sm-7 ">
+                                <input asp-for="Part.ProductNumber" class="form-control" />
+                                <span asp-validation-for="Part.ProductNumber" class="text-danger"></span>
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="row">
+                        <dl class="d-flex mb-1">
+                            <dt class="col-sm-5 ">
+                                <label asp-for="Part.SalesOrder" class="control-label"></label>
+                            </dt>
+                            <dd class="col-sm-7">
+                                <input asp-for="Part.SalesOrder" class="form-control" />
+                                <span asp-validation-for="Part.SalesOrder" class="text-danger"></span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            @* row 2 *@
+            <div class="row m-1">
+                <div class="col-sm-8 border pt-3 ps-3">
+                    <dl>
+                        <dt>
+                            Description of Item <span class="fw-light">(including SAP No.)</span>
+
+                        </dt>
+                        <dd class="mt-1">
+                            <div class="form-group">
+                                <label asp-for="Part.SAPNumber.Number" class="control-label"></label><span class="text-danger"> *</span>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-prepend">
+                                        <button class="btn btn-outline-secondary" id="nowAddSAPNumber" data-bs-toggle="modal" data-bs-target="#addSAPNumberModal" type="button">&#x2795;</button>
+                                    </span>
+                                    <select id="NCRSAPNumberID" asp-for="Part.SAPNumberID" asp-items="ViewBag.SAPNumberID" class="form-control selectpicker border" data-live-search="true" data-style="btn" data-dropup-auto="false">
+                                        <option value="">Select SAP#</option>
+                                    </select>
+                                    <span asp-validation-for="Part.SAPNumberID" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Part.PartName.Name" id="partName" class="control-label"></label><span class="text-danger"> *</span>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-prepend">
+                                        <button class="btn btn-outline-secondary" id="nowAddPartName" data-bs-toggle="modal" data-bs-target="#addPartNameModal" type="button">&#x2795;</button>
+                                    </span>
+                                    <select id="NCRPartNameID" asp-for="Part.PartNameID" asp-items="ViewBag.PartNameID" class="form-control selectpicker border" data-live-search="true" data-style="btn" data-dropup-auto="false">
+                                        <option value="">Select Part</option>
+                                    </select>
+                                    <span asp-validation-for="Part.PartNameID" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Part.Description" class="control-label"></label>
+                                <textarea asp-for="Part.Description" class="form-control" rows="3" cols="30"></textarea>
+                                <span asp-validation-for="Part.Description" class="text-danger"></span>
+                            </div>
+                            <input type="hidden" asp-for="PartID" value="@Model.PartID" />
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-sm-4 border pt-3 ps-3">
+                    <div class="row">
+                        <dl class="d-flex m-0">
+                            <dt class="col-sm">
+                                <label asp-for="Part.QuantityRecieved" class="control-label"></label>
+                            </dt>
+                            <dd class="col-sm">
+                                <input asp-for="Part.QuantityRecieved" class="form-control" />
+                                <span asp-validation-for="Part.QuantityRecieved" class="text-danger"></span>
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="row">
+                        <dl class="d-flex">
+                            <dt class="col-sm">
+                                <label asp-for="Part.QuantityDefect" class="control-label"></label>
+                            </dt>
+                            <dd class="col-sm">
+                                <input asp-for="Part.QuantityDefect" class="form-control" />
+                                <span asp-validation-for="Part.QuantityDefect" class="text-danger"></span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            @* row 3 *@
+            <div class="row m-1">
+                <div class="col-sm-12 border pt-3 ps-3">
+                    <dl>
+                        <dt>
+                            Description of Defect <span class="fw-light">(in as much detail as possible)</span>
+                        </dt>
+                        <dd class="mt-1">
+                            <div class="form-group">
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-outline-secondary" id="nowAddDefect" data-bs-toggle="modal" data-bs-target="#addDefectModal" type="button">&#x2795;</button>
+                                    </div>
+                                    <select id="defectID" name="SelectedDefectID" class="form-control selectpicker border" data-live-search="true" data-style="btn" data-dropup-auto="false" required>
+                                        <option value="">Select Defect</option>
+                                        @foreach (var defect in ViewBag.DefectList)
+                                        {
+                                            if (Model.Part != null && Model.Part.DefectLists != null && Model.Part.DefectLists.Any(defectL => defectL.Defect.Name == defect.Text))
+                                            {
+                                                <option value="@defect.Value" selected>@defect.Text</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@defect.Value">@defect.Text</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <span class="text-danger" id="defectError"></span>
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            @* row 4 *@
+            <div class="row m-1 border">
+                <div class="col-sm-3 pt-3 ps-3 d-flex justify-content-start">
+                    <dl>
+                        <dt>
+                            Item marked Non-conforming
+                        </dt>
+                        <dd class="mt-2">
+                            <div class="d-flex">
+                                @Html.RadioButtonFor(model => model.QualityInspection.ItemMarked, true, new { @checked = Model.QualityInspection != null && Model.QualityInspection.ItemMarked, @class = "me-2" })
+                                <label class="me-4">Yes</label>
+
+                                @Html.RadioButtonFor(model => model.QualityInspection.ItemMarked, false, new { @checked = Model.QualityInspection != null && !Model.QualityInspection.ItemMarked, @class = "me-2" })
+                                <label>No</label>
+                            </div>
+                            <span asp-validation-for="QualityInspection.ItemMarked" class="text-danger"></span>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-sm-3 pt-2">
+                    <small class="fw-light">
+                        Completed NCR to be forwarded to HBC Purchasing Manager complete with any relevant documents attached
+                    </small>
+                </div>
+                <div class="col-sm-6 border pt-3 ps-3">
+                    <div class="row">
+                        <dl class="d-flex m-0">
+                            <dt class="col-sm">
+                                Quality Representative's Name
+                            </dt>
+                            <dd class="col-sm ms-2">
+                                <input asp-for="QualityInspection.Name" required class="form-control" />
+                            </dd>
+                            <span asp-validation-for="QualityInspection.Name" class="text-danger"></span>
+                        </dl>
+                    </div>
+                    <div class="row">
+                        <dl class="d-flex">
+                            <dt class="col-sm">
+                                Date
+                            </dt>
+                            <dd class="col-sm ms-2">
+                                <input asp-for="QualityInspection.Date" type="date" class="form-control" />
+                                <span asp-validation-for="QualityInspection.Date" class="text-danger"></span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            @* row 5 *@
+            <div class="row m-1 border">
+                <dl class="">
+                    <dt class="col-sm pt-3 ps-3 d-flex justify-content-between">
+                        Images
+                        <span class="form-group">
+                            <label for="files">Select files:</label>
+                            <input type="file" name="files" id="files" class="form-control-file" multiple />
+                        </span>
+                    </dt>
+                    <dd class="col-sm pt-3 ps-3 d-flex" id="imagePreview">
+                        @if (Model.Part != null && Model.Part.Medias != null && Model.Part.Medias.Any())
+                        {
+                            foreach (var image in Model.Part.Medias)
+                            {
+                                if (image.Content != null)
+                                {
+                                    <div class="image-container p-3 d-flex">
+                                        <img src="data:@image.MimeType;base64,@Convert.ToBase64String(image.Content)" alt="@image.Description" style="width:300px; height: 300px;" class="me-3" />
+                                        <div class=""> <button class="delete btn btn-danger justify-content-end" data-ncrid="@Model.ID" data-imageid="@image.ID">X</button> @* //passes ncr id and image id *@</div>
+                                    </div>
+                                    <br />
+                                }
+                                else
+                                {
+                                    <span>No Images Available</span>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <span>No Images Associated</span>
+                        }
+                    </dd>
+                </dl>
+
+            </div>
+            @* row 6 *@
+            <div class="row m-1">
+                <div class="col-sm-12 border pt-3 ps-3">
+                    <dl>
+                        <dt class="ps-3">
+                            Links
+                        </dt>
+                        <dd class="d-flex">
+                            @if (Model.Part != null && Model.Part.Medias != null && Model.Part.Medias.Any())
+                            {
+                                foreach (var link in Model.Part.Medias)
+                                {
+                                    if (!string.IsNullOrEmpty(link.Links))
+                                    {
+                                        <div class="link-container ms-3">
+                                            <a href="@link.Links">@link.Links</a>
+                                            <button class="delete-link btn btn-danger m-1" data-ncrid="@Model.ID" data-linkid="@link.ID">X</button>
+                                        </div>
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <p>No Links Associated</p>
+                            }
+                        </dd>
+                    </dl>
+                    <div class="form-group ps-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="links">Enter links (one per line):</label>
+                            <textarea name="links" class="form-control"></textarea>
+                            <span class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!--action buttons-->
+    @if (Model.NCR_Stage != NCRStage.QualityRepresentative)
+    {
+        <div class="d-flex justify-content-end mt-3">
+            @if (!User.IsInRole("Admin"))
+            {
+                <!--cancel goes back to details view-->
+                <div class="mt-2 me-3">
+                    <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="QualityRepDetails" class="btn btn-outline-danger">Cancel</a>
+                </div>
+            }
+            else
+            {
+                <!--back to admin edit-->
+                <div class="mt-2 me-3">
+                    <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="Edit" class="btn btn-outline-danger">Cancel</a>
+                </div>
+            }
+            <!--save report-->
+            <span class="mt-2">
+                <input type="submit" value="Save Changes" class="btn btn-primary" />
+            </span>
+        </div>
+    }
+    <!--mark as completed button (should submit form if all required fields are filled and email next department)-->
+    @if (Model.NCR_Stage == NCRStage.QualityRepresentative)
+    {
+        <div class="d-flex justify-content-between mt-3">
+
+            <div class="d-flex">
+                @if (!User.IsInRole("Admin"))
+                {
+                    <!--back to details view-->
+                    <div class="mt-2 me-3">
+                        <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="QualityRepDetails" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                }
+                else
+                {
+                    <!--back to admin edit-->
+                    <div class="mt-2 me-3">
+                        <a id="cancel-button" asp-route-id="@Model?.ID" asp-action="Edit" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                }
+                <!--save report-->
+                <span class="mt-2">
+                    <input type="submit" value="Save Changes" class="btn btn-outline-primary" />
+                </span>
+            </div>
+
+            <!--Mark as completed-->
+            <div>
+                <span class="mt-2 ms-2">
+                    <input type="submit" value="Section Completed" title="Mark this section as completed" class="btn btn-primary" />
+                </span>
+            </div>
+
+        </div>
+    }
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <!-- refresh ddl script -->
+    <script src="~/js/refreshDDL.js"></script>
+
+    <!--alert for cancel button-->
+    <script>
+        $('#cancel-button').click(function (event) {
+            // Show the confirmation dialog and store the user's response
+            var userConfirmed = confirm('Are you sure you want to cancel? All progress will be lost.');
+
+            // If the user clicks 'Cancel', prevent the default button action
+            if (!userConfirmed) {
+                event.preventDefault();
+            }
+        });
+    </script>
+
+    <!-- Images preview when choosing file ? -->
+    <script>
+
+        document.getElementById('files').addEventListener('change', function (event) {
+            const imageContainer = document.getElementById('imagePreview');
+            imageContainer.innerHTML = ''; // Clear existing images
+
+            const files = event.target.files;
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) { // Make sure it's an image file
+                    const img = document.createElement('img');
+                    img.classList.add('img-fluid', 'm-2'); // Responsive images with some margin
+                    img.style.maxWidth = '50%'; // Limit image size for display
+                    img.style.height = 'auto';
+
+                    const reader = new FileReader();
+                    reader.onload = (function (aImg) {
+                        return function (e) {
+                            aImg.src = e.target.result;
+                        };
+                    })(img);
+                    reader.readAsDataURL(file);
+
+                    imageContainer.appendChild(img); // Add the image to the container
+                }
+            });
+        });
+
+
+    </script>
+
+    <!-- jQuery for quickly add ddl -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- jQuery for validate -->
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.min.js"></script>
+
+    <!-- Bootstrap for searchable ddl -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap-Select's JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
+    <!-- Updated jQuery for selectpicker (conflicts with current one) -->
+    @* <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>  *@
+
+    <!--searchable drop down list-->
+    <script type="text/javascript">
+        $(function () {
+            $("#NCRSupplierID").selectpicker({ width: "auto" });
+        });
+        //defectID
+        $(function () {
+            $("#defectID").selectpicker({ width: "auto" });
+        });
+    </script>
+
+    <!--quickly add ddl supplier-->
+    <script type="text/javascript">
+        $('#submitSupplierCreate').click(function (event) {
+            event.preventDefault();
+            ClearErrors();
+            var form = $('#createSupplierForm');
+            if (form.valid()) {
+                $.ajax({
+                    type: "POST",
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function () {
+                        $('#addSupplierModal').modal('hide');
+                    },
+                    error: function (xhr) { //Note: xhr is the XMLHttpRequest
+                        var errorMessages = [];
+                        switch (xhr.status) {
+                            case 401:
+                                errorMessages.push("You must be logged in first.");
+                                break;
+                            case 403:
+                                errorMessages.push("You are not authorized for this action.");
+                                break;
+                            default:
+                                //Messages coming from the Model State Errors
+                                //We split on the | delimeter and the .slice removes the last one
+                                errorMessages = xhr.responseText.split("|").slice(0, -1);
+                        }
+                        //This checks if there are any elements with some content
+                        //and if not then it provides a default feedback message.
+                        if (!errorMessages.some((str) => str !== "")) {
+                            errorMessages.push("Error: Unable to complete operation");
+                        }
+                        //Put the messages in the ErrorList ul contained in the 'ValidaitonSummary' div.
+                        var ul = document.getElementById("ErrorList");
+                        for (var i = 0; i < errorMessages.length; i++) {
+                            var errorMessage = errorMessages[i];
+                            var li = document.createElement("li");
+                            li.innerHTML = errorMessage;
+                            ul.appendChild(li);
+                        }
+                    }
+                });
+            }
+            return false;
+        });
+
+        $('#addSupplierModal').on('hide.bs.modal', function () {
+            document.getElementById("createSupplierForm").reset();//to clear the data in the popup form
+            ClearErrors();
+            var selectedOption = $('#NCRSupplierID').val();//Return to the current selected value
+            refreshDDL('NCRSupplierID', '/NCRs/GetSuppliers/' + selectedOption, false, null, true, null, true);
+        });
+
+        function ClearErrors() {
+            //Empty out the list of validation errors if there are any
+            var ul = document.getElementById("ErrorList");
+            while (ul.firstChild) {
+                ul.removeChild(ul.firstChild);
+            }
+        }
+    </script>
+
+    <!--quickly add ddl defect-->
+    <script type="text/javascript">
+        $('#submitDefectCreate').click(function (event) {
+            event.preventDefault();
+            ClearErrors();
+            var form = $('#createDefectForm');
+            if (form.valid()) {
+                $.ajax({
+                    type: "POST",
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function () {
+                        $('#addDefectModal').modal('hide');
+                    },
+                    error: function (xhr) { //Note: xhr is the XMLHttpRequest
+                        var errorMessages = [];
+                        switch (xhr.status) {
+                            case 401:
+                                errorMessages.push("You must be logged in first.");
+                                break;
+                            case 403:
+                                errorMessages.push("You are not authorized for this action.");
+                                break;
+                            default:
+                                //Messages coming from the Model State Errors
+                                //We split on the | delimeter and the .slice removes the last one
+                                errorMessages = xhr.responseText.split("|").slice(0, -1);
+                        }
+                        //This checks if there are any elements with some content
+                        //and if not then it provides a default feedback message.
+                        if (!errorMessages.some((str) => str !== "")) {
+                            errorMessages.push("Error: Unable to complete operation");
+                        }
+                        //Put the messages in the ErrorList ul contained in the 'ValidaitonSummary' div.
+                        var ul = document.getElementById("ErrorList");
+                        for (var i = 0; i < errorMessages.length; i++) {
+                            var errorMessage = errorMessages[i];
+                            var li = document.createElement("li");
+                            li.innerHTML = errorMessage;
+                            ul.appendChild(li);
+                        }
+                    }
+                });
+            }
+            return false;
+        });
+        $('#addDefectModal').on('hide.bs.modal', function () {
+            document.getElementById("createDefectForm").reset();//to clear the data in the popup form
+            ClearErrors();
+            var selectedOption = $('#defectID').val();//Return to the current selected value
+            refreshDDL('defectID', '/NCRs/GetDefects/' + selectedOption, false, null, true, null, true);
+        });
+        function ClearErrors() {
+            //Empty out the list of validation errors if there are any
+            var ul = document.getElementById("ErrorList");
+            while (ul.firstChild) {
+                ul.removeChild(ul.firstChild);
+            }
+        }
+    </script>
+
+    <!--quickly add ddl sapnumber-->
+    <script type="text/javascript">
+        $('#submitSAPNumberCreate').click(function (event) {
+            event.preventDefault();
+            ClearErrors();
+            var form = $('#createSAPNumberForm');
+            if (form.valid()) {
+                $.ajax({
+                    type: "POST",
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function () {
+                        $('#addSAPNumberModal').modal('hide');
+                    },
+                    error: function (xhr) { //Note: xhr is the XMLHttpRequest
+                        var errorMessages = [];
+                        switch (xhr.status) {
+                            case 401:
+                                errorMessages.push("You must be logged in first.");
+                                break;
+                            case 403:
+                                errorMessages.push("You are not authorized for this action.");
+                                break;
+                            default:
+                                //Messages coming from the Model State Errors
+                                //We split on the | delimeter and the .slice removes the last one
+                                errorMessages = xhr.responseText.split("|").slice(0, -1);
+                        }
+                        //This checks if there are any elements with some content
+                        //and if not then it provides a default feedback message.
+                        if (!errorMessages.some((str) => str !== "")) {
+                            errorMessages.push("Error: Unable to complete operation");
+                        }
+                        //Put the messages in the ErrorList ul contained in the 'ValidaitonSummary' div.
+                        var ul = document.getElementById("ErrorList");
+                        for (var i = 0; i < errorMessages.length; i++) {
+                            var errorMessage = errorMessages[i];
+                            var li = document.createElement("li");
+                            li.innerHTML = errorMessage;
+                            ul.appendChild(li);
+                        }
+                    }
+                });
+            }
+            return false;
+        });
+
+        $('#addSAPNumberModal').on('hide.bs.modal', function () {
+            document.getElementById("createSAPNumberForm").reset();//to clear the data in the popup form
+            ClearErrors();
+            var selectedOption = $('#NCRSAPNumberID').val();//Return to the current selected value
+            refreshDDL('NCRSAPNumberID', '/NCRs/GetSAPNumbers/' + selectedOption, false, null, true, null, true);
+        });
+
+        function ClearErrors() {
+            //Empty out the list of validation errors if there are any
+            var ul = document.getElementById("ErrorList");
+            while (ul.firstChild) {
+                ul.removeChild(ul.firstChild);
+            }
+        }
+    </script>
+
+    <!--quickly add ddl partname-->
+    <script type="text/javascript">
+        $('#submitPartNameCreate').click(function (event) {
+            event.preventDefault();
+            ClearErrors();
+            var form = $('#createPartNameForm');
+            if (form.valid()) {
+                $.ajax({
+                    type: "POST",
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function () {
+                        $('#addPartNameModal').modal('hide');
+                    },
+                    error: function (xhr) { //Note: xhr is the XMLHttpRequest
+                        var errorMessages = [];
+                        switch (xhr.status) {
+                            case 401:
+                                errorMessages.push("You must be logged in first.");
+                                break;
+                            case 403:
+                                errorMessages.push("You are not authorized for this action.");
+                                break;
+                            default:
+                                //Messages coming from the Model State Errors
+                                //We split on the | delimeter and the .slice removes the last one
+                                errorMessages = xhr.responseText.split("|").slice(0, -1);
+                        }
+                        //This checks if there are any elements with some content
+                        //and if not then it provides a default feedback message.
+                        if (!errorMessages.some((str) => str !== "")) {
+                            errorMessages.push("Error: Unable to complete operation");
+                        }
+                        //Put the messages in the ErrorList ul contained in the 'ValidaitonSummary' div.
+                        var ul = document.getElementById("ErrorList");
+                        for (var i = 0; i < errorMessages.length; i++) {
+                            var errorMessage = errorMessages[i];
+                            var li = document.createElement("li");
+                            li.innerHTML = errorMessage;
+                            ul.appendChild(li);
+                        }
+                    }
+                });
+            }
+            return false;
+        });
+
+        $('#addPartNameModal').on('hide.bs.modal', function () {
+            document.getElementById("createPartNameForm").reset();//to clear the data in the popup form
+            ClearErrors();
+            var selectedOption = $('#NCRPartNameID').val();//Return to the current selected value
+            refreshDDL('NCRPartNameID', '/NCRs/GetPartNames/' + selectedOption, false, null, true, null, true);
+        });
+
+        function ClearErrors() {
+            //Empty out the list of validation errors if there are any
+            var ul = document.getElementById("ErrorList");
+            while (ul.firstChild) {
+                ul.removeChild(ul.firstChild);
+            }
+        }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            // Attach click event handler to elements with class "delete"
+            $(".delete").click(function (event) {
+                // Prevent the default action of the link
+                event.preventDefault();
+
+                // Get the ncrID and imageID of the clicked link
+                var ncrID = $(this).data("ncrid");
+                var imageID = $(this).data("imageid");
+
+                //Storing most recently clicked button
+                var imageContainer = $(this).closest('.image-container');
+
+                // Show confirmation dialog
+                if (confirm('Are you sure you want to remove this image?')) {
+                    // Make AJAX call to remove the image
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("RemoveImage", "NCRs")',
+                        data: { ncrID: ncrID, imageID: imageID },
+                        success: function (response) {
+                            // Remove the image element from the DOM if removal is successful
+                            alert('Image Successfully Deleted!')
+                            imageContainer.remove();
+                        },
+                        error: function (xhr, status, error) {
+                            alert('Delete Failed, Try Again Later.')
+                            console.error(xhr.responseText);
+                        }
+                    });
+                }
+            });
+        });
+
+        //LISTS USING AJAX /JQUEWRY
+
+        $(document).ready(function () {
+            $(".delete-link").click(function (event) {
+                event.preventDefault();
+
+                var ncrID = $(this).data("ncrid");
+                var linkID = $(this).data("linkid");
+
+                var linkContainer = $(this).closest('.link-container'); //gets "this" (data) of the button pressed so it can be used to delete
+
+                if (confirm('Are you sure you want to remove this link?')) {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("RemoveLink", "NCRs")',
+                        data: { ncrID: ncrID, linkID: linkID },
+                        success: function (response) {
+                            alert('Link Successfully Deleted');
+                            linkContainer.remove();
+                        },
+                        error: function (xhr, status, error) {
+                            alert('Delete Failed, Try Again Later.')
+                            console.error(xhr.responseText);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

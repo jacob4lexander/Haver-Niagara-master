@@ -1,0 +1,8 @@
+﻿
+Add-Migration -Context HaverNiagaraDbContext -o Data\HNMigrations Initial
+
+Add-Migration -Context HaverNiagaraDbContext
+Update-Database -Context HaverNiagaraDbContext
+
+Add-Migration -Context ApplicationDbContext -o Data\UserMigrations Initial
+Update-Database -Context ApplicationDbContext

@@ -1,0 +1,224 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+
+@model Haver_Niagara.Models.NCR
+
+@{
+    ViewData["Title"] = $"{@Model.FormattedID} - Operations View";
+}
+
+<link rel="stylesheet" type="text/css" href="@Url.Content("~/css/ncrForm.css")" />
+
+<div class="d-flex justify-content-end">
+    <a id="cancel-button" asp-controller="Home" asp-action="List" class="btn btn-close"></a>
+</div>
+
+<!--Header-->
+<div>
+    <div class="pt-2 pb-0 ps-1 fs-5 d-flex justify-content-between form-labels">
+        <dl class="d-flex ">
+            <dt>
+                @Html.DisplayNameFor(model => model.FormattedID)
+            </dt>
+            <dd class="ms-2">
+                @Html.DisplayFor(model => model.FormattedID)
+                @{
+                    var test = Model;
+                }
+            </dd>
+        </dl>
+        <dl class="d-flex justify-content-between">
+            <dt>
+                Date Created:
+                @* @Html.DisplayNameFor(model => model.NCR_Date) *@
+            </dt>
+            <dd class="ms-2">
+                @Html.DisplayFor(model => model.NCR_Date)
+            </dd>
+        </dl>
+    </div>
+    <div class="d-flex justify-content-between text-muted mb-3 small-stage-labels"">
+        <!--Previous Section = EngineerDetails-->
+        <a asp-action="EngineerDetails" asp-route-id="@Model?.ID" class="btn-forward">
+            <ion-icon name="arrow-back-circle-outline" class="btn-forward-icon"></ion-icon>
+        </a>
+        <!--display enum stage quality rep-->
+        <div>
+            @foreach (var ncrStage in Enum.GetValues(typeof(NCRStage)))
+            {
+                <div class="form-check form-check-inline">
+                    <input type="radio" asp-for="NCR_Stage" disabled class="form-check-input" value="@ncrStage" id="@($"ncrStage{ncrStage}")" />
+                    <label for="@($"ncrStage{ncrStage}")">@((typeof(NCRStage).GetMember(ncrStage.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label>
+                </div>
+            }
+        </div>
+        @if (User.IsInRole("Operations"))
+        {
+            <!--back to ncr log-->
+            <a href="@Url.Action("List", "Home", new { id = @Model.ID })" class="btn-forward" title="Cancel" id="cancel-button">
+                <ion-icon name="close-circle-outline" class="btn-forward-icon"></ion-icon>
+            </a>
+        }
+        else
+        {
+            <!--Next Section = ProcurementDetails-->
+            <a asp-action="ProcurementDetails" asp-route-id="@Model?.ID" class="btn-forward">
+                <ion-icon name="arrow-forward-circle-outline" class="btn-forward-icon"></ion-icon>
+            </a>
+        }
+        @*      <button onclick="window.history.back();" class="btn-forward">
+        <ion-icon name="arrow-forward-circle-outline" class="btn-forward-icon"></ion-icon>
+        </button> *@
+    </div>
+</div>
+
+<!--Details view-->
+<form>
+    <div>
+        @* Operations Section *@
+        <div class="row border m-1 p-2 ps-3 fs-6 section-header bg-secondary">3. Operations</div>
+
+        @* row 11 *@
+        <div class="row m-1 border">
+            <div class="col-sm-6 pt-3 ps-3 d-flex justify-content-start">
+                <dl>
+                    <dt>
+                        Purchasing's Preliminary Decision
+                        @* @Html.DisplayNameFor(model => model.Purchasing.PurchasingDec) *@
+                    </dt>
+                    <dd class="mt-1 ms-2">
+                        @if (Model != null && Model.Operation != null)
+                        {
+                            <div class="mt-1 ms-2">
+                                @foreach (OperationDecision identify in Enum.GetValues(typeof(OperationDecision)))
+                                {
+                                    <span class="ms-5 me-5">
+                                        <input type="radio" id="@identify" name="qualityIdentify" value="@identify" disabled
+                                        @(Model.Operation != null && Model.Operation.OperationDecision == identify ? "checked" : "") />
+                                        @* <label for="@identify">@identify</label><br /> *@
+                                        <label for="@identify">@((typeof(OperationDecision).GetMember(identify.ToString())[0].GetCustomAttributes(typeof(DisplayAttribute), false)[0] as DisplayAttribute).Name)</label><br />
+                                    </span>
+                                }
+                            </div>
+                        }
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-sm-6 border pt-3 ps-3">
+                <div class="row">
+                    <dl class="m-0">
+                        <dt class="col-sm">
+                            Notes
+                        </dt>
+                    </dl>
+                </div>
+                <div class="row">
+                    <dl>
+                        <dd class="col-sm">
+                            @Html.DisplayFor(model => model.Operation.OperationNotes)
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        @* row 12 *@
+        <div class="row m-1 border">
+            <div class="col-sm-4 pt-3 ">
+                <div class="d-flex justify-content-center">
+                    <dl>
+                        <dt>
+                            Was a CAR raised? <span class="fw-light">(If "Yes" indicate CAR #)</span>
+                        </dt>
+                        <dd class="mt-2">
+                            <div class="d-flex">
+                                @Html.RadioButtonFor(model => model.Operation.OperationCar, true, new { @checked = Model.Operation != null && Model.Operation.OperationCar, @disabled = "disabled", @class = "me-2" })
+                                <label class="me-4">Yes</label>
+
+                                @Html.RadioButtonFor(model => model.Operation.OperationCar, false, new { @checked = Model.Operation != null && !Model.Operation.OperationCar, @disabled = "disabled", @class = "me-2" })
+                                <label>No</label>
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="row ms-1 mb-0">
+                    <p>
+                        Car Number: <span class="text-muted">@Html.DisplayFor(model => model.Operation.CAR.CARNumber)</span>
+                    </p>
+                </div>
+                <div class="row ms-1 mb-1">
+                    <p>
+                        Car Date: <span class=text-muted>@Html.DisplayFor(model => model.Operation.CAR.Date)</span>
+                    </p>
+                </div>
+            </div>
+            <div class="col-sm-4 pt-3 border ">
+                <div class="d-flex justify-content-center">
+                    <dl>
+                        <dt>
+                            Follow-up Required? <span class="fw-light">(If "Yes" indicate type & expected date)</span>
+                            @* @Html.DisplayNameFor(model => model.Purchasing.followUp) *@
+                        </dt>
+                        <dd class="mt-2 mb-0">
+                            <div class="d-flex">
+                                <span class="ms-2 me-5">
+
+                                    @Html.RadioButtonFor(model => model.Operation.OperationFollowUp, true, new { @checked = Model.Operation != null && Model.Operation.OperationFollowUp, @disabled = "disabled", @class = "me-2" })
+                                    <label class="me-4">Yes</label>
+
+                                    @Html.RadioButtonFor(model => model.Operation.OperationFollowUp, false, new { @checked = Model.Operation != null && !Model.Operation.OperationFollowUp, @disabled = "disabled", @class = "me-2" })
+                                    <label>No</label>
+                                </span>
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="row ms-1 mb-2">
+                    Type: <span class="text-muted"> @Html.DisplayFor(model => model.Operation.FollowUp.FollowUpType)</span>
+                </div>
+                <div class="row ms-1 mb-2">
+                    Expected Date: <span class="text-muted"> @Html.DisplayFor(model => model.Operation.FollowUp.FollowUpDate)</span>
+                </div>
+            </div>
+            <div class="col-sm-4 border pt-3 ps-3">
+                <div class="row">
+                    <dl class="d-flex m-0">
+                        <dt class="col-sm">
+                            Operations Manager
+                            @* @Html.DisplayNameFor(model => model.Purchasing.PurchaseSignature) *@
+                        </dt>
+                        <dd class="col-sm ms-2">
+                            @Html.DisplayFor(model => model.Operation.Name)
+                        </dd>
+                    </dl>
+                </div>
+                <div class="row">
+                    <dl class="d-flex">
+                        <dt class="col-sm">
+                            Date
+                            @* @Html.DisplayNameFor(model => model.Purchasing.SignatureDate) *@
+                        </dt>
+                        <dd class="col-sm ms-2">
+                            @{
+                                var OperationDate = Model.Operation != null ? Model.Operation.OperationDate.ToString("yyyy-MM-dd") : "Date Not Specified";
+                            }
+                            @OperationDate
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+        @if (User.IsInRole("Operations"))
+        {
+            <div class="mt-2">
+                <a asp-action="OperationEdit" asp-route-id="@Model?.ID" class="btn btn-outline-primary me-3">Edit Section</a>
+            </div>
+        }
+        <div class="mt-2">
+            <a id="cancel-button" asp-controller="Home" asp-action="List" class="btn btn-outline-danger">Cancel</a>
+        </div>
+    </div>
+</form>

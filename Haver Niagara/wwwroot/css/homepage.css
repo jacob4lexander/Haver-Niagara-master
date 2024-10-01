@@ -1,0 +1,642 @@
+﻿h1 {
+    font-size: 38px;
+    font-weight: 600;
+    color: #1C335E;
+}
+
+h2 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 100px;
+    font-weight: 600;
+}
+
+a, a:hover {
+    color: inherit;
+}
+
+.activeCard {
+    border-color: #0073e6;
+    /* color: #0073e6; */
+    color: rgb(0, 115, 230);
+    transition: 0.1s ease-in-out all;
+}
+
+.activeCard:hover {
+    color: rgb(0, 91, 184);
+    border-color: rgb(0, 91, 184);
+}
+
+.body {
+    color: #0C2340;
+    font-family: Montserrat, sans-serif;
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.button {
+    background-color: #0d6efd;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: 700;
+    height: 45px;
+    margin-left: 1rem;
+    padding: 10px;
+    text-align: center;
+    width: 138px;
+}
+
+.card-row {
+    padding: 0 20px;
+}
+
+.card {
+    /* background-color: #E7E7E7; */
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    flex-basis: 32%;
+    padding: 1rem;
+}
+
+.card-content {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
+}
+
+.closedCard {
+    border-color: #b51963;
+    color: #b51963;
+    transition: 0.1s ease-in-out all;
+}
+
+.closedCard:hover {
+    border-color: #90134f;
+    color: #90134f;
+}
+
+.dashboard-bg {
+    background-color: #E7E7E7;
+}
+
+.dashboard-container {
+    background-color: #E7E7E7;
+    border-radius: 20px;
+    margin: 0 auto;
+    max-width: 1000px;
+    padding: 2rem;
+    width: 100%;
+}
+
+.dashboard-row {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.disclaimer-txt {
+    font-size: 12px;
+    text-align: right;
+    margin-left: 23rem;
+}
+
+.filter-container {
+    display: flex;
+    flex-basis: 28%;
+    flex-direction: column;
+    margin-right: 1rem;
+}
+
+.page-title {
+    flex-basis: 50%;
+    text-align: left;
+}
+
+.stageCard {
+    border-color: rgb(0, 191, 178);
+    color: rgb(0, 191, 178);
+    transition: 0.1s ease-in-out all;
+}
+
+.stageCard:hover {
+    border-color: rgb(0, 143, 134);
+    color: rgb(0, 143, 134);
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #dddddd;
+    font-size: 12px;
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #0d6efd;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2
+}
+
+.wide-card {
+    align-items: flex-start;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,p,0,0.1);
+    display: flex;
+    flex-basis: 100%;
+    flex-direction: column;
+    padding: 1rem;
+}
+
+/* media queries */
+
+@media (max-width: 320px) {
+
+    h1 {
+        font-size: 28px;
+        text-align: left;
+        margin-left: 14px;
+    }
+
+    h2 {
+        font-size: 16px;
+        text-align: center;
+    }
+
+    h3 {
+        font-size: 50px;
+    }
+
+    .button {
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .button-container > * {
+        margin-bottom: 10px;
+    }
+
+    .card-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card {
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    .for-small-screen {
+        font-weight: 600;
+    }
+
+    .hide-btns {
+        visibility: hidden;
+    }
+
+    .stage {
+        width: 75%;
+        display: block;
+        margin: 0 auto;
+    }
+
+    select {
+        visibility: hidden;
+    }
+
+    table {
+        width: 100%;
+        border: 1px solid #dddddd;
+        border-radius: 10px;
+    }
+
+    .text-center {
+        font-size: 10px;
+    }
+
+    th, td {
+        font-size: 10px;
+        border: none;
+    }
+
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+    }
+
+    thead th {
+        display: none;
+    }
+
+    th,
+    td {
+        width: 100% !important;
+        text-align: center;
+        padding: 5px;
+    }
+
+    /* Hide status column */
+    tr td:nth-child(1),
+    tr th:nth-child(1) {
+        display: none;
+    }
+
+    /* Hide part number column */
+    tr td:nth-child(4),
+    tr th:nth-child(4) {
+        display: none;
+    }
+
+    .view-btn {
+        font-size: 20px;
+    }
+}
+
+@media (min-width: 321px) and (max-width: 376px) {
+    h1 {
+        font-size: 26px;
+        text-align: left;
+        margin-left: 10px;
+    }
+
+    h2 {
+        font-size: 16px;
+        text-align: center;
+    }
+
+    h3 {
+        font-size: 50px;
+    }
+
+    .button {
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .button-container > * {
+        margin-bottom: 10px;
+    }
+
+    .card-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card {
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    .for-small-screen {
+        font-weight: 600;
+    }
+
+    .hide-btns {
+        visibility: hidden;
+    }
+
+    select {
+        visibility: hidden;
+    }
+
+    .stage {
+        width: 75%;
+        display: block;
+        margin: 0 auto;
+    }
+
+    table {
+        width: 100%;
+        border: 1px solid #dddddd;
+        border-radius: 10px;
+    }
+
+    .text-center {
+        font-size: 10px;
+    }
+
+    th, td {
+        font-size: 10px;
+        border: none;
+    }
+
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+    }
+
+    thead th {
+        display: none;
+    }
+
+    th,
+    td {
+        width: 100% !important;
+        text-align: center;
+        padding: 5px;
+    }
+
+    /* Hide status column */
+    tr td:nth-child(1),
+    tr th:nth-child(1) {
+        display: none;
+    }
+
+    /* Hide part number column */
+    tr td:nth-child(4),
+    tr th:nth-child(4) {
+        display: none;
+    }
+
+    .view-btn {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    #action-buttons-container {
+        display: none;
+    }
+}
+
+@media (min-width: 376px) and (max-width: 426px) {
+    h1 {
+        font-size: 28px;
+        text-align: left;
+        margin-left: 10px;
+    }
+
+    h2 {
+        font-size: 16px;
+        text-align: center;
+    }
+
+    h3 {
+        font-size: 50px;
+    }
+
+    .button {
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .button-container > * {
+        margin-bottom: 10px;
+    }
+
+    .card-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card {
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    .for-small-screen {
+        font-weight: 600;
+    }
+
+    .hide-btns {
+        visibility: hidden;
+    }
+
+    select {
+        visibility: hidden;
+    }
+
+    .stage {
+        width: 75%;
+        display: block;
+        margin: 0 auto;
+    }
+
+    table {
+        width: 100%;
+        border: 1px solid #dddddd;
+        border-radius: 10px;
+    }
+
+    .text-center {
+        font-size: 12px;
+    }
+
+    th, td {
+        font-size: 10px;
+        border: none;
+    }
+
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+    }
+
+    thead th {
+        display: none;
+    }
+
+    th,
+    td {
+        width: 100% !important;
+        text-align: center;
+        padding: 5px;
+    }
+
+    /* Hide status column */
+    tr td:nth-child(1),
+    tr th:nth-child(1) {
+        display: none;
+    }
+
+    /* Hide part number column */
+    tr td:nth-child(4),
+    tr th:nth-child(4) {
+        display: none;
+    }
+
+    .view-all-btn {
+        display: none;
+    }
+    .view-btn {
+        font-size: 25px;
+    }
+}
+
+@media (min-width: 426px) and (max-width: 769px) {
+
+    h1 {
+        font-size: 28px;
+    }
+
+    h2 {
+        font-size: 16px;
+        text-align: center;
+    }
+
+    h3 {
+        font-size: 50px;
+    }
+
+    .button {
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .button-container > * {
+        margin-bottom: 10px;
+    }
+
+    .card-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card {
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    .dashboard-row {
+        padding: 0 4rem;
+    }
+
+    .for-small-screen {
+        font-weight: 600;
+    }
+
+    .hide-btns {
+        visibility: hidden;
+    }
+
+    .mb-4 {
+        margin-bottom: 0.5rem !important;
+        margin-left: 60px;
+    }
+
+    select {
+        visibility: hidden;
+    }
+
+    .stage {
+        width: 55%;
+        display: block;
+        margin: 0 auto;
+    }
+
+    table {
+        width: 100%;
+        border: 1px solid #dddddd;
+        border-radius: 10px;
+    }
+
+    .text-center {
+        font-size: 12px;
+    }
+
+    th, td {
+        font-size: 10px;
+        border: none;
+    }
+
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+    }
+
+    thead th {
+        display: none;
+    }
+
+    th,
+    td {
+        width: 100% !important;
+        text-align: center;
+        padding: 5px;
+    }
+
+    /* Hide status column */
+    tr td:nth-child(1),
+    tr th:nth-child(1) {
+        display: none;
+    }
+
+    /* Hide part number column */
+    tr td:nth-child(4),
+    tr th:nth-child(4) {
+        display: none;
+    }
+
+    .view-all-btn {
+        display: none;
+    }
+
+    .view-btn {
+        font-size: 25px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1025px) {
+
+    h1 {
+        font-size: 36px;
+    }
+}
